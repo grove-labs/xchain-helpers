@@ -52,7 +52,7 @@ library ArbitrumBridgeTesting {
 
     bytes32 private constant MESSAGE_DELIVERED_TOPIC = keccak256("MessageDelivered(uint256,bytes32,address,uint8,address,bytes32,uint256,uint64)");
     bytes32 private constant SEND_TO_L1_TOPIC        = keccak256("SendTxToL1(address,address,bytes)");
-    
+
     function createNativeBridge(Domain memory ethereum, Domain memory arbitrumInstance) internal returns (Bridge memory bridge) {
         (
             address sourceCrossChainMessenger,
@@ -85,6 +85,8 @@ library ArbitrumBridgeTesting {
             sourceCrossChainMessenger = ArbitrumForwarder.L1_CROSS_DOMAIN_ARBITRUM_ONE;
         } else if (name == keccak256("arbitrum_nova")) {
             sourceCrossChainMessenger = ArbitrumForwarder.L1_CROSS_DOMAIN_ARBITRUM_NOVA;
+        } else if (name == keccak256("plume")) {
+            sourceCrossChainMessenger = ArbitrumForwarder.L1_CROSS_DOMAIN_PLUME;
         } else {
             revert("Unsupported destination chain");
         }

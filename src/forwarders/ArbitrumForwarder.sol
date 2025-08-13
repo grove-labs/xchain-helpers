@@ -23,6 +23,7 @@ library ArbitrumForwarder {
 
     address constant internal L1_CROSS_DOMAIN_ARBITRUM_ONE  = 0x4Dbd4fc535Ac27206064B68FfCf827b0A60BAB3f;
     address constant internal L1_CROSS_DOMAIN_ARBITRUM_NOVA = 0xc4448b71118c9071Bcb9734A0EAc55D18A153949;
+    address constant internal L1_CROSS_DOMAIN_PLUME         = 0x943fc691242291B74B105e8D19bd9E5DC2fcBa1D;
     address constant internal L2_CROSS_DOMAIN               = 0x0000000000000000000000000000000000000064;
 
     function sendMessageL1toL2(
@@ -56,5 +57,5 @@ library ArbitrumForwarder {
             message
         );
     }
-    
+
 }

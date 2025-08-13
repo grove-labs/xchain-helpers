@@ -39,6 +39,15 @@ contract ArbitrumIntegrationTest is IntegrationBaseTest {
         runCrossChainTests(getChain("arbitrum_nova").createFork());
     }
 
+    function test_plume() public {
+        setChain("plume", ChainData({
+            name: "Plume",
+            rpcUrl: vm.envString("PLUME_RPC_URL"),
+            chainId: 98866
+        }));
+        runCrossChainTests(getChain("plume").createFork());
+    }
+
     function initSourceReceiver() internal override pure returns (address) {
         return address(0);
     }
