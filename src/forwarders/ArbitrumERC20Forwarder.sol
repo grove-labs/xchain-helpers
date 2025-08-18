@@ -25,12 +25,12 @@ interface IArbSys {
 library ArbitrumERC20Forwarder {
 
     address constant internal L1_CROSS_DOMAIN_PLUME = 0x943fc691242291B74B105e8D19bd9E5DC2fcBa1D;
-    address constant internal PLUME_TOKEN           = 0x4C1746A800D224393fE2470C70A35717eD4eA5F1;
-    address constant internal L2_CROSS_DOMAIN       = 0x0000000000000000000000000000000000000064;
+    address constant internal PLUME_GAS_TOKEN       = 0x4C1746A800D224393fE2470C70A35717eD4eA5F1;
+
+    address constant internal L2_CROSS_DOMAIN = 0x0000000000000000000000000000000000000064;
 
     function sendMessageL1toL2(
         address l1CrossDomain,
-        address gasToken,
         address target,
         bytes memory message,
         uint256 gasLimit,
@@ -40,8 +40,11 @@ library ArbitrumERC20Forwarder {
         uint256 maxSubmission = ICrossDomainArbitrum(l1CrossDomain).calculateRetryableSubmissionFee(message.length, baseFee);
         uint256 tokenTotalFeeAmount = maxSubmission + gasLimit * maxFeePerGas;
 
-        // TODO: Add a check that the sender has enough gas tokens
-        IERC20(gasToken).approve(l1CrossDomain, tokenTotalFeeAmount);
+        if (l1CrossDomain == L1_CROSS_DOMAIN_PLUME) {
+            IERC20(PLUME_GAS_TOKEN).approve(l1CrossDomain, tokenTotalFeeAmount);
+        } else {
+            revert("ArbitrumERC20Forwarder/invalid-l1-cross-domain");
+        }
 
         ICrossDomainArbitrum(l1CrossDomain).createRetryableTicket(
             target,

@@ -12,8 +12,6 @@ contract ArbitrumERC20IntegrationTest is IntegrationBaseTest {
     using ArbitrumBridgeTesting for *;
     using DomainHelpers         for *;
 
-    address gasToken;
-
     function initBaseContracts(Domain memory _destination) internal override {
         super.initBaseContracts(_destination);
     }
@@ -35,15 +33,14 @@ contract ArbitrumERC20IntegrationTest is IntegrationBaseTest {
     function test_plume() public {
         // Needed for arbitrum cross-chain messages
         source.selectFork();
-        deal(ArbitrumERC20Forwarder.PLUME_TOKEN, sourceAuthority, 100 ether);
-        deal(ArbitrumERC20Forwarder.PLUME_TOKEN, randomAddress,   100 ether);
+        deal(ArbitrumERC20Forwarder.PLUME_GAS_TOKEN, sourceAuthority, 100 ether);
+        deal(ArbitrumERC20Forwarder.PLUME_GAS_TOKEN, randomAddress,   100 ether);
 
         setChain("plume", ChainData({
             name: "Plume",
             rpcUrl: vm.envString("PLUME_RPC_URL"),
             chainId: 98866
         }));
-        gasToken = ArbitrumERC20Forwarder.PLUME_TOKEN;
 
         runCrossChainTests(getChain("plume").createFork());
     }
@@ -63,7 +60,6 @@ contract ArbitrumERC20IntegrationTest is IntegrationBaseTest {
     function queueSourceToDestination(bytes memory message) internal override {
         ArbitrumERC20Forwarder.sendMessageL1toL2(
             bridge.sourceCrossChainMessenger,
-            gasToken,
             destinationReceiver,
             message,
             100000,
