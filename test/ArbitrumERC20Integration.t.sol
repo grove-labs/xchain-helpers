@@ -3,27 +3,28 @@ pragma solidity >=0.8.0;
 
 import "./IntegrationBase.t.sol";
 
-import { ArbitrumBridgeTesting } from "src/testing/bridges/ArbitrumBridgeTesting.sol";
-import { ArbitrumForwarder }     from "src/forwarders/ArbitrumForwarder.sol";
-import { ArbitrumReceiver }      from "src/receivers/ArbitrumReceiver.sol";
+import { ArbitrumBridgeTesting }  from "src/testing/bridges/ArbitrumBridgeTesting.sol";
+import { ArbitrumERC20Forwarder } from "src/forwarders/ArbitrumERC20Forwarder.sol";
+import { ArbitrumReceiver }       from "src/receivers/ArbitrumReceiver.sol";
 
-contract ArbitrumIntegrationTest is IntegrationBaseTest {
+contract ArbitrumERC20IntegrationTest is IntegrationBaseTest {
 
     using ArbitrumBridgeTesting for *;
     using DomainHelpers         for *;
 
+    address gasToken;
+
     function initBaseContracts(Domain memory _destination) internal override {
         super.initBaseContracts(_destination);
-
-        // Needed for arbitrum cross-chain messages
-        deal(sourceAuthority, 100 ether);
-        deal(randomAddress,   100 ether);
     }
 
-    // Use Arbitrum One for failure test as the code logic is the same
-
     function test_invalidSourceAuthority() public {
-        initBaseContracts(getChain("arbitrum_one").createFork());
+        setChain("plume", ChainData({
+            name: "Plume",
+            rpcUrl: vm.envString("PLUME_RPC_URL"),
+            chainId: 98866
+        }));
+        initBaseContracts(getChain("plume").createFork());
 
         destination.selectFork();
         vm.expectRevert("ArbitrumReceiver/invalid-l1Authority");
@@ -31,12 +32,20 @@ contract ArbitrumIntegrationTest is IntegrationBaseTest {
         MessageOrdering(destinationReceiver).push(1);
     }
 
-    function test_arbitrumOne() public {
-        runCrossChainTests(getChain("arbitrum_one").createFork());
-    }
+    function test_plume() public {
+        // Needed for arbitrum cross-chain messages
+        source.selectFork();
+        deal(ArbitrumERC20Forwarder.PLUME_TOKEN, sourceAuthority, 100 ether);
+        deal(ArbitrumERC20Forwarder.PLUME_TOKEN, randomAddress,   100 ether);
 
-    function test_arbitrumNova() public {
-        runCrossChainTests(getChain("arbitrum_nova").createFork());
+        setChain("plume", ChainData({
+            name: "Plume",
+            rpcUrl: vm.envString("PLUME_RPC_URL"),
+            chainId: 98866
+        }));
+        gasToken = ArbitrumERC20Forwarder.PLUME_TOKEN;
+
+        runCrossChainTests(getChain("plume").createFork());
     }
 
     function initSourceReceiver() internal override pure returns (address) {
@@ -52,8 +61,9 @@ contract ArbitrumIntegrationTest is IntegrationBaseTest {
     }
 
     function queueSourceToDestination(bytes memory message) internal override {
-        ArbitrumForwarder.sendMessageL1toL2(
+        ArbitrumERC20Forwarder.sendMessageL1toL2(
             bridge.sourceCrossChainMessenger,
+            gasToken,
             destinationReceiver,
             message,
             100000,
@@ -63,7 +73,7 @@ contract ArbitrumIntegrationTest is IntegrationBaseTest {
     }
 
     function queueDestinationToSource(bytes memory message) internal override {
-        ArbitrumForwarder.sendMessageL2toL1(
+        ArbitrumERC20Forwarder.sendMessageL2toL1(
             address(moSource),  // No receiver so send directly to the message ordering contract
             message
         );

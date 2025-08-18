@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 pragma solidity >=0.8.0;
 
-import { Vm }        from "forge-std/Vm.sol";
+import { Vm } from "forge-std/Vm.sol";
 
-import { Bridge, BridgeType }    from "../Bridge.sol";
-import { Domain, DomainHelpers } from "../Domain.sol";
-import { RecordedLogs }          from "../utils/RecordedLogs.sol";
-import { ArbitrumForwarder }     from "../../forwarders/ArbitrumForwarder.sol";
+import { Bridge, BridgeType }     from "../Bridge.sol";
+import { Domain, DomainHelpers }  from "../Domain.sol";
+import { RecordedLogs }           from "../utils/RecordedLogs.sol";
+import { ArbitrumForwarder }      from "../../forwarders/ArbitrumForwarder.sol";
+import { ArbitrumERC20Forwarder } from "../../forwarders/ArbitrumERC20Forwarder.sol";
 
 interface InboxLike {
     function createRetryableTicket(
@@ -50,8 +51,9 @@ library ArbitrumBridgeTesting {
 
     Vm private constant vm = Vm(address(uint160(uint256(keccak256("hevm cheat code")))));
 
-    bytes32 private constant MESSAGE_DELIVERED_TOPIC = keccak256("MessageDelivered(uint256,bytes32,address,uint8,address,bytes32,uint256,uint64)");
-    bytes32 private constant SEND_TO_L1_TOPIC        = keccak256("SendTxToL1(address,address,bytes)");
+    bytes32 private constant MESSAGE_DELIVERED_TOPIC       = keccak256("MessageDelivered(uint256,bytes32,address,uint8,address,bytes32,uint256,uint64)");
+    bytes32 private constant INBOX_MESSAGE_DELIVERED_TOPIC = keccak256("InboxMessageDelivered(uint256,bytes)");
+    bytes32 private constant SEND_TO_L1_TOPIC              = keccak256("SendTxToL1(address,address,bytes)");
 
     function createNativeBridge(Domain memory ethereum, Domain memory arbitrumInstance) internal returns (Bridge memory bridge) {
         (
@@ -86,7 +88,7 @@ library ArbitrumBridgeTesting {
         } else if (name == keccak256("arbitrum_nova")) {
             sourceCrossChainMessenger = ArbitrumForwarder.L1_CROSS_DOMAIN_ARBITRUM_NOVA;
         } else if (name == keccak256("plume")) {
-            sourceCrossChainMessenger = ArbitrumForwarder.L1_CROSS_DOMAIN_PLUME;
+            sourceCrossChainMessenger = ArbitrumERC20Forwarder.L1_CROSS_DOMAIN_PLUME;
         } else {
             revert("Unsupported destination chain");
         }
@@ -133,9 +135,15 @@ library ArbitrumBridgeTesting {
         for (; bridge.lastSourceLogIndex < logs.length; bridge.lastSourceLogIndex++) {
             Vm.Log memory log = logs[bridge.lastSourceLogIndex];
             if (log.topics[0] == MESSAGE_DELIVERED_TOPIC && log.emitter == abi.decode(bridge.extraData, (address))) {
-                // We need both the current event and the one that follows for all the relevant data
-                Vm.Log memory logWithData = logs[bridge.lastSourceLogIndex + 1];
                 (,, address sender,,,) = abi.decode(log.data, (address, uint8, address, bytes32, uint256, uint64));
+                // We need both the current event and InboxMessageDelivered that follows for all the relevant data
+                // It should be the next one, but when working with ERC20Inbox, a Transfer event is emitted in between
+                Vm.Log memory logWithData;
+                if (logs[bridge.lastSourceLogIndex + 1].topics[0] == INBOX_MESSAGE_DELIVERED_TOPIC) {
+                    logWithData = logs[bridge.lastSourceLogIndex + 1];
+                } else {
+                    logWithData = logs[bridge.lastSourceLogIndex + 2];
+                }
                 (address target, bytes memory message) = _parseData(logWithData.data);
                 vm.startPrank(sender);
                 (bool success, bytes memory response) = target.call(message);
