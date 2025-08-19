@@ -6,6 +6,7 @@ import "./IntegrationBase.t.sol";
 import { ArbitrumBridgeTesting }  from "src/testing/bridges/ArbitrumBridgeTesting.sol";
 import { ArbitrumERC20Forwarder } from "src/forwarders/ArbitrumERC20Forwarder.sol";
 import { ArbitrumReceiver }       from "src/receivers/ArbitrumReceiver.sol";
+import { ArbitrumERC20ForwarderExecutor } from "./mocks/ArbitrumERC20ForwarderExecutor.sol";
 
 contract ArbitrumERC20IntegrationTest is IntegrationBaseTest {
 
@@ -28,6 +29,17 @@ contract ArbitrumERC20IntegrationTest is IntegrationBaseTest {
         vm.expectRevert("ArbitrumReceiver/invalid-l1Authority");
         vm.prank(randomAddress);
         MessageOrdering(destinationReceiver).push(1);
+    }
+
+    function test_invalidL1CrossDomain() public {
+        ArbitrumERC20ForwarderExecutor executor = new ArbitrumERC20ForwarderExecutor();
+
+        vm.expectRevert("ArbitrumERC20Forwarder/invalid-l1-cross-domain");
+        executor.sendMessageL1toL2(
+            randomAddress,
+            destinationReceiver,
+            ""
+        );
     }
 
     function test_plume() public {
