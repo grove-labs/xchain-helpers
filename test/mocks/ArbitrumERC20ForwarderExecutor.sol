@@ -5,6 +5,10 @@ import { ArbitrumERC20Forwarder } from "src/forwarders/ArbitrumERC20Forwarder.so
 
 contract ArbitrumERC20ForwarderExecutor {
 
+    uint256 internal constant GAS_LIMIT       = 100_000;
+    uint256 internal constant MAX_FEE_PER_GAS = 1 gwei;
+    uint256 internal constant BASE_FEE        = 1 gwei;
+
     function sendMessageL1toL2(
         address l1CrossDomain,
         address target,
@@ -14,9 +18,9 @@ contract ArbitrumERC20ForwarderExecutor {
             l1CrossDomain,
             target,
             message,
-            100000,
-            1 gwei,
-            1 gwei
+            GAS_LIMIT,
+            MAX_FEE_PER_GAS,
+            BASE_FEE
         );
     }
 
