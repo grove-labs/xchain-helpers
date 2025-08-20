@@ -53,7 +53,7 @@ library ArbitrumERC20Forwarder {
             address(0), // burn the excess gas
             gasLimit,
             maxFeePerGas,
-            maxSubmission + gasLimit * maxFeePerGas,
+            maxSubmission + gasLimit * maxFeePerGas, // max redemption fee
             message
         );
     }
