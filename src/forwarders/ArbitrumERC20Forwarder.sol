@@ -59,7 +59,7 @@ library ArbitrumERC20Forwarder {
             message
         );
 
-        IERC20(gasToken).approve(l1CrossDomain, 0);
+        SafeERC20.forceApprove(gasToken, l1CrossDomain, 0);
     }
 
     function sendMessageL2toL1(
