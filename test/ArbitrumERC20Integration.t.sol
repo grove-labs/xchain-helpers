@@ -3,9 +3,12 @@ pragma solidity >=0.8.0;
 
 import "./IntegrationBase.t.sol";
 
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+
 import { ArbitrumBridgeTesting }  from "src/testing/bridges/ArbitrumBridgeTesting.sol";
 import { ArbitrumERC20Forwarder } from "src/forwarders/ArbitrumERC20Forwarder.sol";
 import { ArbitrumReceiver }       from "src/receivers/ArbitrumReceiver.sol";
+
 import { ArbitrumERC20ForwarderExecutor } from "./mocks/ArbitrumERC20ForwarderExecutor.sol";
 
 contract ArbitrumERC20IntegrationTest is IntegrationBaseTest {
@@ -40,6 +43,26 @@ contract ArbitrumERC20IntegrationTest is IntegrationBaseTest {
             destinationReceiver,
             ""
         );
+    }
+
+    function test_approvalReset() public {
+        source.selectFork();
+        ArbitrumERC20ForwarderExecutor executor = new ArbitrumERC20ForwarderExecutor();
+        deal(ArbitrumERC20Forwarder.PLUME_GAS_TOKEN, address(executor), 100 ether);
+
+        deal(
+            ArbitrumERC20Forwarder.PLUME_GAS_TOKEN,
+            ArbitrumERC20Forwarder.L1_CROSS_DOMAIN_PLUME,
+            100 ether
+        );
+
+        executor.sendMessageL1toL2(
+            ArbitrumERC20Forwarder.L1_CROSS_DOMAIN_PLUME,
+            destinationReceiver,
+            ""
+        );
+
+        assertEq(IERC20(ArbitrumERC20Forwarder.PLUME_GAS_TOKEN).allowance(address(executor), ArbitrumERC20Forwarder.L1_CROSS_DOMAIN_PLUME), 0);
     }
 
     function test_plume() public {

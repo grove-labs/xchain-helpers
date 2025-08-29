@@ -58,6 +58,8 @@ library ArbitrumERC20Forwarder {
             maxSubmission + gasLimit * maxFeePerGas, // max redemption fee
             message
         );
+
+        SafeERC20.forceApprove(gasToken, l1CrossDomain, 0);
     }
 
     function sendMessageL2toL1(
