@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 pragma solidity ^0.8.0;
 
+import { IERC20 }    from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+
 struct MessagingParams {
     uint32  dstEid;
     bytes32 receiver;
@@ -21,10 +24,12 @@ struct MessagingFee {
 }
 
 interface ILayerZeroEndpointV2 {
+    function lzToken() external view returns (address);
     function send(
         MessagingParams calldata _params,
         address                  _refundAddress
     ) external payable returns (MessagingReceipt memory);
+    function setLzToken(address _lzToken) external;
     function quote(
         MessagingParams calldata _params,
         address                  _sender
@@ -32,6 +37,8 @@ interface ILayerZeroEndpointV2 {
 }
 
 library LZForwarder {
+
+    error LzTokenUnavailable();
 
     uint32 public constant ENDPOINT_ID_BASE     = 30184;
     uint32 public constant ENDPOINT_ID_BNB      = 30102;
@@ -51,19 +58,30 @@ library LZForwarder {
         ILayerZeroEndpointV2 endpoint,
         bytes         memory _message,
         bytes         memory _options,
-        address              _refundAddress
+        address              _refundAddress,
+        bool                 _payInLzToken
     ) internal {
         MessagingParams memory params = MessagingParams({
             dstEid:       _dstEid,
             receiver:     _receiver,
             message:      _message,
             options:      _options,
-            payInLzToken: false
+            payInLzToken: _payInLzToken
         });
 
         MessagingFee memory fee = endpoint.quote(params, address(this));
+        if (fee.lzTokenFee > 0) _payLzToken(endpoint, fee.lzTokenFee);
 
         endpoint.send{ value: fee.nativeFee }(params, _refundAddress);
+    }
+
+    function _payLzToken(ILayerZeroEndpointV2 endpoint, uint256 _lzTokenFee) internal {
+        // @dev Cannot cache the token because it is not immutable in the endpoint.
+        address lzToken = endpoint.lzToken();
+        if (lzToken == address(0)) revert LzTokenUnavailable();
+
+        // Pay LZ token fee by sending tokens to the endpoint.
+        SafeERC20.safeTransfer(IERC20(lzToken), address(endpoint), _lzTokenFee);
     }
 
 }
