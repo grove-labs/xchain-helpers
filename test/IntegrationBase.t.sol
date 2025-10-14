@@ -135,7 +135,6 @@ abstract contract IntegrationBaseTest is Test {
 
         source.selectFork();
 
-        // Queue up two more Source -> Destination messages
         vm.startPrank(sourceAuthority);
         queueSourceToDestination(abi.encodeCall(MessageOrdering.push, (1)));
         queueSourceToDestination(abi.encodeCall(MessageOrdering.push, (2)));
@@ -153,7 +152,6 @@ abstract contract IntegrationBaseTest is Test {
 
         assertEq(moSource.length(), 0);
 
-        // Do one more message both ways to ensure subsequent calls don't repeat already sent messages
         vm.startPrank(sourceAuthority);
         queueSourceToDestination(abi.encodeCall(MessageOrdering.push, (5)));
         vm.stopPrank();
