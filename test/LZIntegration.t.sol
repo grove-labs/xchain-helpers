@@ -162,6 +162,19 @@ contract LZIntegrationTest is IntegrationBaseTest {
         runCrossChainTests(getChain("bnb_smart_chain").createFork());
     }
 
+    function test_plasma() public {
+        destinationEndpointId = LZForwarder.ENDPOINT_ID_PLASMA;
+        destinationEndpoint   = LZForwarder.ENDPOINT_PLASMA;
+
+        setChain("plasma", ChainData({
+            name: "Plasma",
+            rpcUrl: vm.envString("PLASMA_RPC_URL"),
+            chainId: 9745
+        }));
+
+        runOnlySourceToDestinationCrossChainTests(getChain("plasma").createFork());
+    }
+
     function initSourceReceiver() internal override returns (address) {
         return address(new LZReceiver(
             sourceEndpoint,

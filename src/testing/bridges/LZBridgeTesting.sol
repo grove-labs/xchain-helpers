@@ -45,7 +45,7 @@ contract PacketBytesHelper {
     function guid(bytes calldata packetBytes) external pure returns (bytes32) {
         return PacketV1Codec.guid(packetBytes);
     }
-    
+
     function message(bytes calldata packetBytes) external pure returns (bytes memory) {
         return PacketV1Codec.message(packetBytes);
     }
@@ -84,6 +84,8 @@ library LZBridgeTesting {
             return LZForwarder.ENDPOINT_BNB;
         } else if (name == keccak256("avalanche")) {
             return LZForwarder.ENDPOINT_AVALANCHE;
+        } else if (name == keccak256("plasma")) {
+            return LZForwarder.ENDPOINT_PLASMA;
         } else {
             revert("Unsupported chain");
         }
@@ -99,6 +101,8 @@ library LZBridgeTesting {
             return LZForwarder.RECEIVE_LIBRARY_BNB;
         } else if (name == keccak256("avalanche")) {
             return LZForwarder.RECEIVE_LIBRARY_AVALANCHE;
+        } else if (name == keccak256("plasma")) {
+            return LZForwarder.RECEIVE_LIBRARY_PLASMA;
         } else {
             revert("Unsupported chain");
         }

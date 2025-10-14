@@ -126,6 +126,34 @@ abstract contract IntegrationBaseTest is Test {
         assertEq(moSource.messages(2), 6);
     }
 
+    function runOnlySourceToDestinationCrossChainTests(Domain memory _destination) internal {
+        initBaseContracts(_destination);
+
+        source.selectFork();
+
+        vm.startPrank(sourceAuthority);
+        queueSourceToDestination(abi.encodeCall(MessageOrdering.push, (1)));
+        queueSourceToDestination(abi.encodeCall(MessageOrdering.push, (2)));
+        vm.stopPrank();
+
+        relaySourceToDestination();
+
+        assertEq(moDestination.length(), 2);
+        assertEq(moDestination.messages(0), 1);
+        assertEq(moDestination.messages(1), 2);
+
+        source.selectFork();
+
+        vm.startPrank(sourceAuthority);
+        queueSourceToDestination(abi.encodeCall(MessageOrdering.push, (5)));
+        vm.stopPrank();
+
+        relaySourceToDestination();
+
+        assertEq(moDestination.length(), 3);
+        assertEq(moDestination.messages(2), 5);
+    }
+
     function initSourceReceiver() internal virtual returns (address);
     function initDestinationReceiver() internal virtual returns (address);
     function initBridgeTesting() internal virtual returns (Bridge memory);
