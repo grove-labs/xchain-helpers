@@ -129,12 +129,19 @@ abstract contract IntegrationBaseTest is Test {
     function runOnlySourceToDestinationCrossChainTests(Domain memory _destination) internal {
         initBaseContracts(_destination);
 
+        destination.selectFork();
+
+        assertEq(moDestination.length(), 0);
+
         source.selectFork();
 
+        // Queue up two more Source -> Destination messages
         vm.startPrank(sourceAuthority);
         queueSourceToDestination(abi.encodeCall(MessageOrdering.push, (1)));
         queueSourceToDestination(abi.encodeCall(MessageOrdering.push, (2)));
         vm.stopPrank();
+
+        assertEq(moSource.length(), 0);
 
         relaySourceToDestination();
 
@@ -142,8 +149,11 @@ abstract contract IntegrationBaseTest is Test {
         assertEq(moDestination.messages(0), 1);
         assertEq(moDestination.messages(1), 2);
 
-        source.selectFork();
+        relayDestinationToSource();
 
+        assertEq(moSource.length(), 0);
+
+        // Do one more message both ways to ensure subsequent calls don't repeat already sent messages
         vm.startPrank(sourceAuthority);
         queueSourceToDestination(abi.encodeCall(MessageOrdering.push, (5)));
         vm.stopPrank();
@@ -152,6 +162,10 @@ abstract contract IntegrationBaseTest is Test {
 
         assertEq(moDestination.length(), 3);
         assertEq(moDestination.messages(2), 5);
+
+        relayDestinationToSource();
+
+        assertEq(moSource.length(), 0);
     }
 
     function initSourceReceiver() internal virtual returns (address);
