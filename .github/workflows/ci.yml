@@ -44,6 +44,7 @@ jobs:
           WORLD_CHAIN_RPC_URL: ${{secrets.WORLD_CHAIN_RPC_URL}}
           UNICHAIN_RPC_URL: ${{secrets.UNICHAIN_RPC_URL}}
           PLUME_RPC_URL: ${{secrets.PLUME_RPC_URL}}
+          PLASMA_RPC_URL: ${{secrets.PLASMA_RPC_URL}}
         run: FOUNDRY_PROFILE=ci forge test
 
   coverage:
@@ -66,6 +67,7 @@ jobs:
           WORLD_CHAIN_RPC_URL: ${{secrets.WORLD_CHAIN_RPC_URL}}
           UNICHAIN_RPC_URL: ${{secrets.UNICHAIN_RPC_URL}}
           PLUME_RPC_URL: ${{secrets.PLUME_RPC_URL}}
+          PLASMA_RPC_URL: ${{secrets.PLASMA_RPC_URL}}
         run: forge coverage --report summary --report lcov
 
       # To ignore coverage for certain directories modify the paths in this step as needed. The
