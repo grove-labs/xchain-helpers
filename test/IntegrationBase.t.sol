@@ -48,7 +48,14 @@ abstract contract IntegrationBaseTest is Test {
     Bridge bridge;
 
     function setUp() public virtual {
-        setChain("plasma-mainnet", ChainData({name: "plasma-mainnet", chainId: 9745, rpcUrl: "https://rpc.plasma.to"}));
+        setChain(
+            "plasma", 
+            ChainData({
+                name: "plasma", 
+                chainId: 9745, 
+                rpcUrl: vm.envString("PLASMA_RPC_URL")
+            })
+        );
         source = getChain("mainnet").createFork();
     }
 

@@ -166,7 +166,7 @@ contract LZIntegrationTest is IntegrationBaseTest {
         destinationEndpointId = LZForwarder.ENDPOINT_ID_PLASMA;
         destinationEndpoint   = LZForwarder.ENDPOINT_PLASMA;
 
-        runCrossChainTests(getChain("plasma-mainnet").createFork());
+        runCrossChainTests(getChain("plasma").createFork());
     }
 
     function initSourceReceiver() internal override returns (address) {
