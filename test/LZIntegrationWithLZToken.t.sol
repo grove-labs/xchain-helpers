@@ -62,6 +62,13 @@ contract LZIntegrationTestWithLZToken is IntegrationBaseTest {
         runCrossChainTests(getChain("bnb_smart_chain").createFork());
     }
 
+    function test_plasma() public {
+        destinationEndpointId = LZForwarder.ENDPOINT_ID_PLASMA;
+        destinationEndpoint   = LZForwarder.ENDPOINT_PLASMA;
+
+        runCrossChainTests(getChain("plasma").createFork());
+    }
+
     function initSourceReceiver() internal override returns (address) {
         return address(new LZReceiver(
             sourceEndpoint,
@@ -114,7 +121,7 @@ contract LZIntegrationTestWithLZToken is IntegrationBaseTest {
     }
 
     function queueDestinationToSource(bytes memory message) internal override {
-        vm.deal(destinationAuthority, 1 ether); // Gas to queue message
+        vm.deal(destinationAuthority, 1000 ether); // Gas to queue message
 
         bytes memory options = OptionsBuilder.newOptions().addExecutorLzReceiveOption(200_000, 0);
 
