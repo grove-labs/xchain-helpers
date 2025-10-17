@@ -26,6 +26,8 @@ interface IEndpoint {
         bytes calldata _message,
         bytes calldata _extraData
     ) external payable;
+
+    function inboundNonce(address _receiver, uint32 _srcEid, bytes32 _sender) external view returns (uint64);
 }
 
 contract PacketBytesHelper {
@@ -135,6 +137,8 @@ library LZBridgeTesting {
             bytes32 guid = getGuid(encodedPacket);
             bytes memory message = getMessage(encodedPacket);
 
+            uint64 inboundNonce = IEndpoint(bridge.destinationCrossChainMessenger).inboundNonce(receiver, getSourceEid(encodedPacket), bytes32(uint256(uint160(sender))));
+
             if (destinationEid == IEndpoint(bridge.destinationCrossChainMessenger).eid()) {
                 ( , address destinationReceiveLibrary ) = abi.decode(bridge.extraData, (address, address));
                 bytes32 payloadHash = keccak256(abi.encodePacked(guid, message));
@@ -146,7 +150,7 @@ library LZBridgeTesting {
                     Origin({
                         srcEid: getSourceEid(encodedPacket),
                         sender: bytes32(uint256(uint160(sender))),
-                        nonce:  getNonce(encodedPacket)
+                        nonce:  inboundNonce + 1
                     }),
                     receiver,
                     payloadHash
@@ -159,7 +163,7 @@ library LZBridgeTesting {
                     Origin({
                         srcEid: getSourceEid(encodedPacket),
                         sender: bytes32(uint256(uint160(sender))),
-                        nonce:  getNonce(encodedPacket)
+                        nonce:  inboundNonce + 1
                     }),
                     receiver,
                     guid,
@@ -191,6 +195,7 @@ library LZBridgeTesting {
             uint32 destinationEid = getDestinationEid(encodedPacket);  // NOTE: destinationEid in this case is for the source endpoint ID
             bytes32 guid = getGuid(encodedPacket);
             bytes memory message = getMessage(encodedPacket);
+            uint64 inboundNonce = IEndpoint(bridge.sourceCrossChainMessenger).inboundNonce(receiver, getSourceEid(encodedPacket), bytes32(uint256(uint160(sender))));
 
             if (destinationEid == IEndpoint(bridge.sourceCrossChainMessenger).eid()) {
                 ( address sourceReceiveLibrary, ) = abi.decode(bridge.extraData, (address, address));
@@ -203,7 +208,7 @@ library LZBridgeTesting {
                     Origin({
                         srcEid: getSourceEid(encodedPacket),
                         sender: bytes32(uint256(uint160(sender))),
-                        nonce:  getNonce(encodedPacket)
+                        nonce:  inboundNonce + 1
                     }),
                     receiver,
                     payloadHash
@@ -216,7 +221,7 @@ library LZBridgeTesting {
                     Origin({
                         srcEid: getSourceEid(encodedPacket),
                         sender: bytes32(uint256(uint160(sender))),
-                        nonce:  getNonce(encodedPacket)
+                        nonce:  inboundNonce + 1
                     }),
                     receiver,
                     guid,
