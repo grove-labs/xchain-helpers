@@ -49,10 +49,10 @@ abstract contract IntegrationBaseTest is Test {
 
     function setUp() public virtual {
         setChain(
-            "plasma", 
+            "plasma",
             ChainData({
-                name: "plasma", 
-                chainId: 9745, 
+                name: "plasma",
+                chainId: 9745,
                 rpcUrl: vm.envString("PLASMA_RPC_URL")
             })
         );
