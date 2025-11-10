@@ -116,23 +116,11 @@ contract CircleCCTPv2IntegrationTest is IntegrationBaseTest {
     }
 
     function test_unichain() public {
-        setChain("unichain", ChainData({
-            name: "Unichain",
-            rpcUrl: vm.envString("UNICHAIN_RPC_URL"),
-            chainId: 130
-        }));
-
         destinationDomainId = CCTPv2Forwarder.DOMAIN_ID_CIRCLE_UNICHAIN;
         runCrossChainTests(getChain("unichain").createFork());
     }
 
     function test_world_chain() public {
-        setChain("world_chain", ChainData({
-            name: "World Chain",
-            rpcUrl: vm.envString("WORLD_CHAIN_RPC_URL"),
-            chainId: 480
-        }));
-
         destinationDomainId = CCTPv2Forwarder.DOMAIN_ID_CIRCLE_WORLDCHAIN;
         runCrossChainTests(getChain("world_chain").createFork());
     }
@@ -143,12 +131,6 @@ contract CircleCCTPv2IntegrationTest is IntegrationBaseTest {
     }
 
     function test_plume() public {
-        setChain("plume", ChainData({
-            name: "Plume",
-            rpcUrl: vm.envString("PLUME_RPC_URL"),
-            chainId: 98866
-        }));
-
         destinationDomainId = CCTPv2Forwarder.DOMAIN_ID_CIRCLE_PLUME;
         runCrossChainTests(getChain("plume").createFork());
     }

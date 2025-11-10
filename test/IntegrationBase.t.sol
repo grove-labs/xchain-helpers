@@ -48,15 +48,34 @@ abstract contract IntegrationBaseTest is Test {
     Bridge bridge;
 
     function setUp() public virtual {
-        setChain(
-            "plasma",
-            ChainData({
-                name: "plasma",
-                chainId: 9745,
-                rpcUrl: vm.envString("PLASMA_RPC_URL")
-            })
-        );
+        setUpNonStandardChains();
         source = getChain("mainnet").createFork();
+    }
+
+    function setUpNonStandardChains() internal virtual {
+        setChain("plume", ChainData({
+            name: "Plume",
+            rpcUrl: vm.envString("PLUME_RPC_URL"),
+            chainId: 98866
+        }));
+
+        setChain("plasma", ChainData({
+            name: "Plasma",
+            rpcUrl: vm.envString("PLASMA_RPC_URL"),
+            chainId: 9745
+        }));
+
+        setChain("unichain", ChainData({
+            name: "Unichain",
+            rpcUrl: vm.envString("UNICHAIN_RPC_URL"),
+            chainId: 130
+        }));
+
+        setChain("world_chain", ChainData({
+            name: "World Chain",
+            rpcUrl: vm.envString("WORLD_CHAIN_RPC_URL"),
+            chainId: 480
+        }));
     }
 
     function initBaseContracts(Domain memory _destination) internal virtual {
