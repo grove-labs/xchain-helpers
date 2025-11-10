@@ -191,7 +191,7 @@ library CCTPv2BridgeTesting {
      * @return processedMessage The processed message with updated nonce and finality threshold executed fields.
      *
      * The function clones the original message, replaces the nonce (bytes 12-43) with a pseudo-random value, and sets
-     * the "finality threshold executed" (bytes 144-148) to match "min finality threshold" (bytes 140-144).
+     * the "finality threshold executed" (bytes 144-147) to match "min finality threshold" (bytes 140-143).
      */
     function processMessage(bytes memory message) internal view returns (bytes memory processedMessage) {
         processedMessage = abi.encodePacked(message);
