@@ -6,7 +6,7 @@ interface IMessageTransmitterV2 {
         uint32 destinationDomain,
         bytes32 recipient,
         bytes32 destinationCaller,    // 0x0 = anyone can relay
-        uint32 minFinalityThreshold, // choose fast/standard
+        uint32 minFinalityThreshold,  // 2000 = standard (finalized), 1000 = fast (unfinalized)
         bytes calldata messageBody
     ) external;
 }
