@@ -115,11 +115,32 @@ contract CircleCCTPv2IntegrationTest is IntegrationBaseTest {
         runCrossChainTests(getChain("polygon").createFork());
     }
 
+    function test_unichain() public {
+        setChain("unichain", ChainData({
+            name: "Unichain",
+            rpcUrl: vm.envString("UNICHAIN_RPC_URL"),
+            chainId: 130
+        }));
+
+        destinationDomainId = CCTPv2Forwarder.DOMAIN_ID_CIRCLE_UNICHAIN;
+        runCrossChainTests(getChain("unichain").createFork());
+    }
+
+    function test_world_chain() public {
+        setChain("world_chain", ChainData({
+            name: "World Chain",
+            rpcUrl: vm.envString("WORLD_CHAIN_RPC_URL"),
+            chainId: 480
+        }));
+
+        destinationDomainId = CCTPv2Forwarder.DOMAIN_ID_CIRCLE_WORLDCHAIN;
+        runCrossChainTests(getChain("world_chain").createFork());
+    }
+
     function test_bnb_smart_chain() public {
         destinationDomainId = CCTPv2Forwarder.DOMAIN_ID_CIRCLE_BSC;
         runCrossChainTests(getChain("bnb_smart_chain").createFork());
     }
-
 
     function test_plume() public {
         setChain("plume", ChainData({
@@ -134,11 +155,6 @@ contract CircleCCTPv2IntegrationTest is IntegrationBaseTest {
 
     // These tests use chains not supported by std.chains. Add proper chain configuration and proper tests when needed.
 
-    // function test_unichain() public {
-    //     destinationDomainId = CCTPv2Forwarder.DOMAIN_ID_CIRCLE_UNICHAIN;
-    //     runCrossChainTests(getChain("unichain").createFork());
-    // }
-
     // function test_linea() public {
     //     destinationDomainId = CCTPv2Forwarder.DOMAIN_ID_CIRCLE_LINEA;
     //     runCrossChainTests(getChain("linea").createFork());
@@ -152,11 +168,6 @@ contract CircleCCTPv2IntegrationTest is IntegrationBaseTest {
     // function test_sonic() public {
     //     destinationDomainId = CCTPv2Forwarder.DOMAIN_ID_CIRCLE_SONIC;
     //     runCrossChainTests(getChain("sonic").createFork());
-    // }
-
-    // function test_world_chain() public {
-    //     destinationDomainId = CCTPv2Forwarder.DOMAIN_ID_CIRCLE_WORLDCHAIN;
-    //     runCrossChainTests(getChain("world_chain").createFork());
     // }
 
     // function test_sei() public {
