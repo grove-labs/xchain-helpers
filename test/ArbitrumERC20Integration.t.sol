@@ -21,11 +21,6 @@ contract ArbitrumERC20IntegrationTest is IntegrationBaseTest {
     }
 
     function test_invalidSourceAuthority() public {
-        setChain("plume", ChainData({
-            name: "Plume",
-            rpcUrl: vm.envString("PLUME_RPC_URL"),
-            chainId: 98866
-        }));
         initBaseContracts(getChain("plume").createFork());
 
         destination.selectFork();
@@ -70,12 +65,6 @@ contract ArbitrumERC20IntegrationTest is IntegrationBaseTest {
         source.selectFork();
         deal(ArbitrumERC20Forwarder.PLUME_GAS_TOKEN, sourceAuthority, 100 ether);
         deal(ArbitrumERC20Forwarder.PLUME_GAS_TOKEN, randomAddress,   100 ether);
-
-        setChain("plume", ChainData({
-            name: "Plume",
-            rpcUrl: vm.envString("PLUME_RPC_URL"),
-            chainId: 98866
-        }));
 
         runCrossChainTests(getChain("plume").createFork());
     }
