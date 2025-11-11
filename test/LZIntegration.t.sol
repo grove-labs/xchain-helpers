@@ -162,6 +162,13 @@ contract LZIntegrationTest is IntegrationBaseTest {
         runCrossChainTests(getChain("bnb_smart_chain").createFork());
     }
 
+    function test_monad() public {
+        destinationEndpointId = LZForwarder.ENDPOINT_ID_MONAD;
+        destinationEndpoint   = LZForwarder.ENDPOINT_MONAD;
+
+        runCrossChainTests(getChain("monad").createFork());
+    }
+
     function test_plasma() public {
         destinationEndpointId = LZForwarder.ENDPOINT_ID_PLASMA;
         destinationEndpoint   = LZForwarder.ENDPOINT_PLASMA;

@@ -53,6 +53,12 @@ abstract contract IntegrationBaseTest is Test {
     }
 
     function setUpNonStandardChains() internal virtual {
+        setChain("monad", ChainData({
+            name: "Monad",
+            rpcUrl: vm.envString("MONAD_RPC_URL"),
+            chainId: 143
+        }));
+
         setChain("plume", ChainData({
             name: "Plume",
             rpcUrl: vm.envString("PLUME_RPC_URL"),

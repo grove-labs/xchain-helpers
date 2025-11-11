@@ -40,22 +40,25 @@ library LZForwarder {
 
     error LzTokenUnavailable();
 
+    uint32 public constant ENDPOINT_ID_ETHEREUM  = 30101;
     uint32 public constant ENDPOINT_ID_AVALANCHE = 30106;
     uint32 public constant ENDPOINT_ID_BASE      = 30184;
     uint32 public constant ENDPOINT_ID_BNB       = 30102;
-    uint32 public constant ENDPOINT_ID_ETHEREUM  = 30101;
+    uint32 public constant ENDPOINT_ID_MONAD     = 30390;
     uint32 public constant ENDPOINT_ID_PLASMA    = 30383;
 
+    address public constant ENDPOINT_ETHEREUM  = 0x1a44076050125825900e736c501f859c50fE728c;
     address public constant ENDPOINT_AVALANCHE = 0x1a44076050125825900e736c501f859c50fE728c;
     address public constant ENDPOINT_BASE      = 0x1a44076050125825900e736c501f859c50fE728c;
     address public constant ENDPOINT_BNB       = 0x1a44076050125825900e736c501f859c50fE728c;
-    address public constant ENDPOINT_ETHEREUM  = 0x1a44076050125825900e736c501f859c50fE728c;
+    address public constant ENDPOINT_MONAD     = 0x6F475642a6e85809B1c36Fa62763669b1b48DD5B;
     address public constant ENDPOINT_PLASMA    = 0x6F475642a6e85809B1c36Fa62763669b1b48DD5B;
 
+    address public constant RECEIVE_LIBRARY_ETHEREUM  = 0xc02Ab410f0734EFa3F14628780e6e695156024C2;
     address public constant RECEIVE_LIBRARY_AVALANCHE = 0xbf3521d309642FA9B1c91A08609505BA09752c61;
     address public constant RECEIVE_LIBRARY_BASE      = 0xc70AB6f32772f59fBfc23889Caf4Ba3376C84bAf;
     address public constant RECEIVE_LIBRARY_BNB       = 0xB217266c3A98C8B2709Ee26836C98cf12f6cCEC1;
-    address public constant RECEIVE_LIBRARY_ETHEREUM  = 0xc02Ab410f0734EFa3F14628780e6e695156024C2;
+    address public constant RECEIVE_LIBRARY_MONAD     = 0xe1844c5D63a9543023008D332Bd3d2e6f1FE1043;
     address public constant RECEIVE_LIBRARY_PLASMA    = 0xe1844c5D63a9543023008D332Bd3d2e6f1FE1043;
 
     function sendMessage(
