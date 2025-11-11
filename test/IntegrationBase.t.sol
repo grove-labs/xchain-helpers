@@ -54,33 +54,33 @@ abstract contract IntegrationBaseTest is Test {
 
     function setUpNonStandardChains() internal virtual {
         setChain("monad", ChainData({
-            name: "Monad",
-            rpcUrl: vm.envString("MONAD_RPC_URL"),
-            chainId: 143
+            name    : "Monad",
+            rpcUrl  : vm.envString("MONAD_RPC_URL"),
+            chainId : 143
         }));
 
         setChain("plume", ChainData({
-            name: "Plume",
-            rpcUrl: vm.envString("PLUME_RPC_URL"),
-            chainId: 98866
+            name    : "Plume",
+            rpcUrl  : vm.envString("PLUME_RPC_URL"),
+            chainId : 98866
         }));
 
         setChain("plasma", ChainData({
-            name: "Plasma",
-            rpcUrl: vm.envString("PLASMA_RPC_URL"),
-            chainId: 9745
+            name    : "Plasma",
+            rpcUrl  : vm.envString("PLASMA_RPC_URL"),
+            chainId : 9745
         }));
 
         setChain("unichain", ChainData({
-            name: "Unichain",
-            rpcUrl: vm.envString("UNICHAIN_RPC_URL"),
-            chainId: 130
+            name    : "Unichain",
+            rpcUrl  : vm.envString("UNICHAIN_RPC_URL"),
+            chainId : 130
         }));
 
         setChain("world_chain", ChainData({
-            name: "World Chain",
-            rpcUrl: vm.envString("WORLD_CHAIN_RPC_URL"),
-            chainId: 480
+            name    : "World Chain",
+            rpcUrl  : vm.envString("WORLD_CHAIN_RPC_URL"),
+            chainId : 480
         }));
     }
 
@@ -106,6 +106,10 @@ abstract contract IntegrationBaseTest is Test {
     function runCrossChainTests(Domain memory _destination) internal {
         initBaseContracts(_destination);
 
+        executeTestingSequence();
+    }
+
+    function executeTestingSequence() internal {
         destination.selectFork();
 
         // Queue up some Destination -> Source messages
