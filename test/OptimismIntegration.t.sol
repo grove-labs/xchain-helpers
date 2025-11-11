@@ -48,20 +48,10 @@ contract OptimismIntegrationTest is IntegrationBaseTest {
     }
 
     function test_world_chain() public {
-        setChain("world_chain", ChainData({
-            name: "World Chain",
-            rpcUrl: vm.envString("WORLD_CHAIN_RPC_URL"),
-            chainId: 480
-        }));
         runCrossChainTests(getChain("world_chain").createFork());
     }
 
     function test_unichain() public {
-        setChain("unichain", ChainData({
-            name: "Unichain",
-            rpcUrl: vm.envString("UNICHAIN_RPC_URL"),
-            chainId: 130
-        }));
         runCrossChainTests(getChain("unichain").createFork());
     }
 

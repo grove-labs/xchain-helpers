@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 pragma solidity >=0.8.0;
 
-import { Vm }        from "forge-std/Vm.sol";
+import { Vm } from "forge-std/Vm.sol";
 
 import { Bridge, BridgeType }    from "../Bridge.sol";
 import { Domain, DomainHelpers } from "../Domain.sol";
@@ -21,7 +21,7 @@ library CCTPBridgeTesting {
     using RecordedLogs  for *;
 
     Vm private constant vm = Vm(address(uint160(uint256(keccak256("hevm cheat code")))));
-    
+
     function createCircleBridge(Domain memory source, Domain memory destination) internal returns (Bridge memory bridge) {
         return init(Bridge({
             bridgeType:                     BridgeType.CCTP,
@@ -95,7 +95,7 @@ library CCTPBridgeTesting {
 
     function relayMessagesToSource(Bridge storage bridge, bool switchToSourceFork) internal {
         bridge.source.selectFork();
-        
+
         Vm.Log[] memory logs = bridge.ingestAndFilterLogs(false, SENT_MESSAGE_TOPIC, bridge.destinationCrossChainMessenger);
         for (uint256 i = 0; i < logs.length; i++) {
             bytes memory message = abi.decode(logs[i].data, (bytes));
