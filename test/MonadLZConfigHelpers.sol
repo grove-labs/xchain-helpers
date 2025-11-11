@@ -82,7 +82,7 @@ library MonadLZConfigHelpers {
 
     // Working DVN Addresses (NOT the placeholder deadDVNs)
     address private constant ETHEREUM_DVN = 0x589dEDbD617e0CBcB916A9223F4d1300c294236b;  // Base/Plasma DVN
-    address private constant MONAD_DVN    = 0x282b3386571f7f794450d5789911a9804FA346b4;     // LayerZero Labs DVN
+    address private constant MONAD_DVN    = 0x282b3386571f7f794450d5789911a9804FA346b4;  // LayerZero Labs DVN
 
     // Executor Addresses
     address private constant ETHEREUM_EXECUTOR = 0x173272739Bd7Aa6e4e214714048a9fE699453059;
