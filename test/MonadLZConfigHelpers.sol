@@ -93,90 +93,77 @@ library MonadLZConfigHelpers {
         Domain memory ethereumFork,
         Domain memory monadFork
     ) internal {
-        _configureEthereumToMonad(ethereumFork);
-        _configureMonadToEthereum(monadFork);
+        _configureDirection({
+            fork      : ethereumFork,
+            endpoint  : LZForwarder.ENDPOINT_ETHEREUM,
+            admin     : ETHEREUM_ADMIN,
+            remoteEid : LZForwarder.ENDPOINT_ID_MONAD,
+            dvn       : ETHEREUM_DVN,
+            executor  : ETHEREUM_EXECUTOR
+        });
+        _configureDirection({
+            fork      : monadFork,
+            endpoint  : LZForwarder.ENDPOINT_MONAD,
+            admin     : MONAD_ADMIN,
+            remoteEid : LZForwarder.ENDPOINT_ID_ETHEREUM,
+            dvn       : MONAD_DVN,
+            executor  : MONAD_EXECUTOR
+        });
     }
 
-    function _configureEthereumToMonad(Domain memory ethereumFork) private {
-        ethereumFork.selectFork();
+    /**
+     * @notice Configures default DVNs and Executors for a given source/target direction.
+     * @param fork Domain of the network to operate on (source side)
+     * @param endpoint Address of the LayerZero endpoint whose send library will be mutated (on 'fork')
+     * @param admin Address to use for vm.prank and permissions
+     * @param remoteEid The remote endpoint id this config will target
+     * @param dvn Address of the working DVN for this direction
+     * @param executor Address of the working Executor for this direction
+     */
+    function _configureDirection(
+        Domain  memory fork,
+        address endpoint,
+        address admin,
+        uint32  remoteEid,
+        address dvn,
+        address executor
+    ) private {
+        fork.selectFork();
 
-        address sendLib = ILayerZeroEndpointV2Admin(LZForwarder.ENDPOINT_ETHEREUM).getSendLibrary(address(0), LZForwarder.ENDPOINT_ID_MONAD);
+        address sendLib = ILayerZeroEndpointV2Admin(endpoint).getSendLibrary(address(0), remoteEid);
 
-        {
-            // Set default ULN config with working Ethereum DVN
-            address[] memory dvns = new address[](1);
-            dvns[0] = ETHEREUM_DVN;
+        // Set default ULN config with working DVN
+        address[] memory dvns = new address[](1);
+        dvns[0] = dvn;
 
-            SetDefaultUlnConfigParam[] memory ulnParams = new SetDefaultUlnConfigParam[](1);
-            ulnParams[0] = SetDefaultUlnConfigParam({
-                eid    : LZForwarder.ENDPOINT_ID_MONAD,
-                config : UlnConfig({
-                    confirmations        : 15,
-                    requiredDVNCount     : 1,
-                    optionalDVNCount     : 0,
-                    optionalDVNThreshold : 0,
-                    requiredDVNs         : dvns,
-                    optionalDVNs         : new address[](0)
-                })
-            });
+        SetDefaultUlnConfigParam[] memory ulnParams = new SetDefaultUlnConfigParam[](1);
+        ulnParams[0] = SetDefaultUlnConfigParam({
+            eid    : remoteEid,
+            config : UlnConfig({
+                confirmations        : 15,
+                requiredDVNCount     : 1,
+                optionalDVNCount     : 0,
+                optionalDVNThreshold : 0,
+                requiredDVNs         : dvns,
+                optionalDVNs         : new address[](0)
+            })
+        });
 
-            vm.prank(ETHEREUM_ADMIN);
-            ISendLibAdmin(sendLib).setDefaultUlnConfigs(ulnParams);
+        vm.prank(admin);
+        ISendLibAdmin(sendLib).setDefaultUlnConfigs(ulnParams);
 
-            // Set default Executor config
-            SetDefaultExecutorConfigParam[] memory execParams = new SetDefaultExecutorConfigParam[](1);
-            execParams[0] = SetDefaultExecutorConfigParam({
-                eid    : LZForwarder.ENDPOINT_ID_MONAD,
-                config : ExecutorConfig({
-                    maxMessageSize : 10000,
-                    executor       : ETHEREUM_EXECUTOR
-                })
-            });
+        // Set default Executor config
+        SetDefaultExecutorConfigParam[] memory execParams = new SetDefaultExecutorConfigParam[](1);
+        execParams[0] = SetDefaultExecutorConfigParam({
+            eid    : remoteEid,
+            config : ExecutorConfig({
+                maxMessageSize : 10000,
+                executor       : executor
+            })
+        });
 
-            vm.prank(ETHEREUM_ADMIN);
-            ISendLibAdmin(sendLib).setDefaultExecutorConfigs(execParams);
-        }
-    }
-
-    function _configureMonadToEthereum(Domain memory monadFork) private {
-        monadFork.selectFork();
-
-        address sendLib = ILayerZeroEndpointV2Admin(LZForwarder.ENDPOINT_MONAD).getSendLibrary(address(0), LZForwarder.ENDPOINT_ID_ETHEREUM);
-
-        {
-            // Set default ULN config with working Monad DVN (LayerZero Labs)
-            address[] memory dvns = new address[](1);
-            dvns[0] = MONAD_DVN;
-
-            SetDefaultUlnConfigParam[] memory ulnParams = new SetDefaultUlnConfigParam[](1);
-            ulnParams[0] = SetDefaultUlnConfigParam({
-                eid    : LZForwarder.ENDPOINT_ID_ETHEREUM,
-                config : UlnConfig({
-                    confirmations        : 15,
-                    requiredDVNCount     : 1,
-                    optionalDVNCount     : 0,
-                    optionalDVNThreshold : 0,
-                    requiredDVNs         : dvns,
-                    optionalDVNs         : new address[](0)
-                })
-            });
-
-            vm.prank(MONAD_ADMIN);
-            ISendLibAdmin(sendLib).setDefaultUlnConfigs(ulnParams);
-
-            // Set default Executor config
-            SetDefaultExecutorConfigParam[] memory execParams = new SetDefaultExecutorConfigParam[](1);
-            execParams[0] = SetDefaultExecutorConfigParam({
-                eid    : LZForwarder.ENDPOINT_ID_ETHEREUM,
-                config : ExecutorConfig({
-                    maxMessageSize : 10000,
-                    executor       : MONAD_EXECUTOR
-                })
-            });
-
-            vm.prank(MONAD_ADMIN);
-            ISendLibAdmin(sendLib).setDefaultExecutorConfigs(execParams);
-        }
+        vm.prank(admin);
+        ISendLibAdmin(sendLib).setDefaultExecutorConfigs(execParams);
     }
 
 }
