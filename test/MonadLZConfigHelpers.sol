@@ -3,6 +3,8 @@ pragma solidity >=0.8.0;
 
 import { Vm } from "forge-std/Vm.sol";
 
+import { LZForwarder } from "src/forwarders/LZForwarder.sol";
+
 import { Domain, DomainHelpers } from "src/testing/Domain.sol";
 
 /**
@@ -68,17 +70,9 @@ library MonadLZConfigHelpers {
 
     Vm private constant vm = Vm(address(uint160(uint256(keccak256("hevm cheat code")))));
 
-    // LayerZero Endpoint Addresses
-    address private constant ETHEREUM_ENDPOINT = 0x1a44076050125825900e736c501f859c50fE728c;
-    address private constant MONAD_ENDPOINT    = 0x6F475642a6e85809B1c36Fa62763669b1b48DD5B;
-
     // LayerZero Admin Addresses
     address private constant ETHEREUM_ADMIN = 0xBe010A7e3686FdF65E93344ab664D065A0B02478;
     address private constant MONAD_ADMIN    = 0xE590a6730D7a8790E99ce3db11466Acb644c3942;
-
-    // Endpoint IDs
-    uint32 private constant ETHEREUM_EID = 30101;
-    uint32 private constant MONAD_EID    = 30390;
 
     // Working DVN Addresses (NOT the placeholder deadDVNs)
     address private constant ETHEREUM_DVN = 0x589dEDbD617e0CBcB916A9223F4d1300c294236b;  // Base/Plasma DVN
@@ -106,7 +100,7 @@ library MonadLZConfigHelpers {
     function _configureEthereumToMonad(Domain memory ethereumFork) private {
         ethereumFork.selectFork();
 
-        address sendLib = ILayerZeroEndpointV2Admin(ETHEREUM_ENDPOINT).getSendLibrary(address(0), MONAD_EID);
+        address sendLib = ILayerZeroEndpointV2Admin(LZForwarder.ENDPOINT_ETHEREUM).getSendLibrary(address(0), LZForwarder.ENDPOINT_ID_MONAD);
 
         {
             // Set default ULN config with working Ethereum DVN
@@ -115,7 +109,7 @@ library MonadLZConfigHelpers {
 
             SetDefaultUlnConfigParam[] memory ulnParams = new SetDefaultUlnConfigParam[](1);
             ulnParams[0] = SetDefaultUlnConfigParam({
-                eid    : MONAD_EID,
+                eid    : LZForwarder.ENDPOINT_ID_MONAD,
                 config : UlnConfig({
                     confirmations        : 15,
                     requiredDVNCount     : 1,
@@ -132,7 +126,7 @@ library MonadLZConfigHelpers {
             // Set default Executor config
             SetDefaultExecutorConfigParam[] memory execParams = new SetDefaultExecutorConfigParam[](1);
             execParams[0] = SetDefaultExecutorConfigParam({
-                eid    : MONAD_EID,
+                eid    : LZForwarder.ENDPOINT_ID_MONAD,
                 config : ExecutorConfig({
                     maxMessageSize : 10000,
                     executor       : ETHEREUM_EXECUTOR
@@ -147,7 +141,7 @@ library MonadLZConfigHelpers {
     function _configureMonadToEthereum(Domain memory monadFork) private {
         monadFork.selectFork();
 
-        address sendLib = ILayerZeroEndpointV2Admin(MONAD_ENDPOINT).getSendLibrary(address(0), ETHEREUM_EID);
+        address sendLib = ILayerZeroEndpointV2Admin(LZForwarder.ENDPOINT_MONAD).getSendLibrary(address(0), LZForwarder.ENDPOINT_ID_ETHEREUM);
 
         {
             // Set default ULN config with working Monad DVN (LayerZero Labs)
@@ -156,7 +150,7 @@ library MonadLZConfigHelpers {
 
             SetDefaultUlnConfigParam[] memory ulnParams = new SetDefaultUlnConfigParam[](1);
             ulnParams[0] = SetDefaultUlnConfigParam({
-                eid    : ETHEREUM_EID,
+                eid    : LZForwarder.ENDPOINT_ID_ETHEREUM,
                 config : UlnConfig({
                     confirmations        : 15,
                     requiredDVNCount     : 1,
@@ -173,7 +167,7 @@ library MonadLZConfigHelpers {
             // Set default Executor config
             SetDefaultExecutorConfigParam[] memory execParams = new SetDefaultExecutorConfigParam[](1);
             execParams[0] = SetDefaultExecutorConfigParam({
-                eid    : ETHEREUM_EID,
+                eid    : LZForwarder.ENDPOINT_ID_ETHEREUM,
                 config : ExecutorConfig({
                     maxMessageSize : 10000,
                     executor       : MONAD_EXECUTOR

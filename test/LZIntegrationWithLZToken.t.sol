@@ -20,10 +20,9 @@ interface ITreasury {
 
 contract LZIntegrationTestWithLZToken is IntegrationBaseTest {
 
-    using DomainHelpers        for *;
-    using LZBridgeTesting      for *;
-    using MonadLZConfigHelpers for *;
-    using OptionsBuilder       for bytes;
+    using DomainHelpers   for *;
+    using LZBridgeTesting for *;
+    using OptionsBuilder  for bytes;
 
     uint32 sourceEndpointId = LZForwarder.ENDPOINT_ID_ETHEREUM;
     uint32 destinationEndpointId;
