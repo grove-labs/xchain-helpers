@@ -71,7 +71,14 @@ contract LZIntegrationTestWithLZToken is IntegrationBaseTest {
 
         // MONAD-SPECIFIC WORKAROUND: Configure working DVNs to bypass placeholder deadDVNs
         // TODO: Remove this once Monad's LayerZero deployment is complete with real DVNs
-        MonadLZConfigHelpers.configureMonadDefaults(source, destination);
+        MonadLZConfigHelpers.configureMonadDefaults(
+            source,
+            sourceReceiver,
+            destination,
+            destinationReceiver,
+            sourceAuthority,
+            destinationAuthority
+        );
 
         executeTestingSequence();
     }

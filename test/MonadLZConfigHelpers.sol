@@ -3,6 +3,10 @@ pragma solidity >=0.8.0;
 
 import { Vm } from "forge-std/Vm.sol";
 
+import { IOAppCore } from "layerzerolabs/oapp-evm/contracts/oapp/interfaces/IOAppCore.sol";
+import { SetConfigParam } from "@layerzerolabs/lz-evm-protocol-v2/contracts/interfaces/IMessageLibManager.sol";
+import { UlnConfig } from "@layerzerolabs/lz-evm-messagelib-v2/contracts/uln/UlnBase.sol";
+
 import { LZForwarder } from "src/forwarders/LZForwarder.sol";
 
 import { Domain, DomainHelpers } from "src/testing/Domain.sol";
@@ -25,26 +29,8 @@ import { Domain, DomainHelpers } from "src/testing/Domain.sol";
  *      and real DVNs are configured as defaults.
  */
 
-struct UlnConfig {
-    uint64 confirmations;
-    uint8 requiredDVNCount;
-    uint8 optionalDVNCount;
-    uint8 optionalDVNThreshold;
-    address[] requiredDVNs;
-    address[] optionalDVNs;
-}
-
-struct SetDefaultUlnConfigParam {
-    uint32 eid;
-    UlnConfig config;
-}
-
 interface ILayerZeroEndpointV2Admin {
     function getSendLibrary(address sender, uint32 dstEid) external view returns (address lib);
-}
-
-interface ISendLibAdmin {
-    function setDefaultUlnConfigs(SetDefaultUlnConfigParam[] calldata _params) external;
 }
 
 library MonadLZConfigHelpers {
@@ -52,10 +38,6 @@ library MonadLZConfigHelpers {
     using DomainHelpers for *;
 
     Vm private constant vm = Vm(address(uint160(uint256(keccak256("hevm cheat code")))));
-
-    // LayerZero Admin Addresses
-    address private constant ETHEREUM_ADMIN = 0xBe010A7e3686FdF65E93344ab664D065A0B02478;
-    address private constant MONAD_ADMIN    = 0xE590a6730D7a8790E99ce3db11466Acb644c3942;
 
     // Working DVN Addresses (NOT the placeholder deadDVNs)
     address private constant ETHEREUM_DVN = 0x589dEDbD617e0CBcB916A9223F4d1300c294236b;  // Base/Plasma DVN
@@ -65,25 +47,81 @@ library MonadLZConfigHelpers {
      * @notice Configure working DVNs for Monad↔Ethereum route
      * @dev This function ONLY patches the Monad route's incomplete deployment.
      *      It sets default configurations that all OApps will inherit.
+     *
+     *      In the test environment, we configure both:
+     *      1. The LZReceiver OApp contracts (for receiving messages)
+     *      2. The test contract itself (for sending messages via LZForwarder)
+     *
      * @param ethereumFork The Ethereum fork/domain
      * @param monadFork The Monad fork/domain
      */
     function configureMonadDefaults(
         Domain memory ethereumFork,
-        Domain memory monadFork
+        address ethereumOapp,
+        Domain memory monadFork,
+        address monadOapp,
+        address sourceAuthority,
+        address destinationAuthority
     ) internal {
+        // Get the test contract address (the caller of this library function)
+        address testContract = address(this);
+
+        // Configure the OApp on Ethereum to send to Monad and receive from Monad
         _configureDirection({
             fork      : ethereumFork,
+            oapp      : ethereumOapp,
             endpoint  : LZForwarder.ENDPOINT_ETHEREUM,
-            admin     : ETHEREUM_ADMIN,
             remoteEid : LZForwarder.ENDPOINT_ID_MONAD,
+            receiveLib: LZForwarder.RECEIVE_LIBRARY_ETHEREUM,
             dvn       : ETHEREUM_DVN
         });
+
+        // Configure the OApp on Monad to send to Ethereum and receive from Ethereum
         _configureDirection({
             fork      : monadFork,
+            oapp      : monadOapp,
             endpoint  : LZForwarder.ENDPOINT_MONAD,
-            admin     : MONAD_ADMIN,
             remoteEid : LZForwarder.ENDPOINT_ID_ETHEREUM,
+            receiveLib: LZForwarder.RECEIVE_LIBRARY_MONAD,
+            dvn       : MONAD_DVN
+        });
+
+        // ALSO configure the test contract itself as a sender on BOTH chains
+        // because in tests, LZForwarder.sendMessage is called from the test contract
+        _configureDirection({
+            fork      : ethereumFork,
+            oapp      : testContract,
+            endpoint  : LZForwarder.ENDPOINT_ETHEREUM,
+            remoteEid : LZForwarder.ENDPOINT_ID_MONAD,
+            receiveLib: LZForwarder.RECEIVE_LIBRARY_ETHEREUM,
+            dvn       : ETHEREUM_DVN
+        });
+
+        _configureDirection({
+            fork      : monadFork,
+            oapp      : testContract,
+            endpoint  : LZForwarder.ENDPOINT_MONAD,
+            remoteEid : LZForwarder.ENDPOINT_ID_ETHEREUM,
+            receiveLib: LZForwarder.RECEIVE_LIBRARY_MONAD,
+            dvn       : MONAD_DVN
+        });
+
+        // ALSO configure the authority addresses (the refund addresses used in sendMessage)
+        _configureDirection({
+            fork      : ethereumFork,
+            oapp      : sourceAuthority,
+            endpoint  : LZForwarder.ENDPOINT_ETHEREUM,
+            remoteEid : LZForwarder.ENDPOINT_ID_MONAD,
+            receiveLib: LZForwarder.RECEIVE_LIBRARY_ETHEREUM,
+            dvn       : ETHEREUM_DVN
+        });
+
+        _configureDirection({
+            fork      : monadFork,
+            oapp      : destinationAuthority,
+            endpoint  : LZForwarder.ENDPOINT_MONAD,
+            remoteEid : LZForwarder.ENDPOINT_ID_ETHEREUM,
+            receiveLib: LZForwarder.RECEIVE_LIBRARY_MONAD,
             dvn       : MONAD_DVN
         });
     }
@@ -92,15 +130,15 @@ library MonadLZConfigHelpers {
      * @notice Configures default DVNs for a given source/target direction.
      * @param fork Domain of the network to operate on (source side)
      * @param endpoint Address of the LayerZero endpoint whose send library will be mutated (on 'fork')
-     * @param admin Address to use for vm.prank and permissions
      * @param remoteEid The remote endpoint id this config will target
      * @param dvn Address of the working DVN for this direction
      */
     function _configureDirection(
         Domain  memory fork,
+        address oapp,
         address endpoint,
-        address admin,
         uint32  remoteEid,
+        address receiveLib,
         address dvn
     ) private {
         fork.selectFork();
@@ -111,21 +149,55 @@ library MonadLZConfigHelpers {
         address[] memory dvns = new address[](1);
         dvns[0] = dvn;
 
-        SetDefaultUlnConfigParam[] memory ulnParams = new SetDefaultUlnConfigParam[](1);
-        ulnParams[0] = SetDefaultUlnConfigParam({
-            eid    : remoteEid,
-            config : UlnConfig({
+        SetConfigParam[] memory configParams = new SetConfigParam[](1);
+        configParams[0] = SetConfigParam({
+            eid: remoteEid, configType: 2, config: abi.encode(UlnConfig({
                 confirmations        : 15,
                 requiredDVNCount     : 1,
                 optionalDVNCount     : 0,
                 optionalDVNThreshold : 0,
                 requiredDVNs         : dvns,
                 optionalDVNs         : new address[](0)
-            })
-        });
+            }))});
 
-        vm.prank(admin);
-        ISendLibAdmin(sendLib).setDefaultUlnConfigs(ulnParams);
+        // Use the provided endpoint address directly
+        address endpointAddr = endpoint;
+
+        // First, explicitly set the send library for this OApp
+        vm.prank(oapp);
+        (bool libSuccess,) = endpointAddr.call(
+            abi.encodeWithSignature(
+                "setSendLibrary(address,uint32,address)",
+                oapp,
+                remoteEid,
+                sendLib
+            )
+        );
+        require(libSuccess, "setSendLibrary failed");
+
+        // Configure send library (for outgoing messages)
+        vm.prank(oapp);
+        (bool success1,) = endpointAddr.call(
+            abi.encodeWithSignature(
+                "setConfig(address,address,(uint32,uint32,bytes)[])",
+                oapp,
+                sendLib,
+                configParams
+            )
+        );
+        require(success1, "setConfig for send library failed");
+
+        // Configure receive library (for incoming messages)
+        vm.prank(oapp);
+        (bool success2,) = endpointAddr.call(
+            abi.encodeWithSignature(
+                "setConfig(address,address,(uint32,uint32,bytes)[])",
+                oapp,
+                receiveLib,
+                configParams
+            )
+        );
+        require(success2, "setConfig for receive library failed");
     }
 
 }

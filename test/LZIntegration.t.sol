@@ -163,7 +163,7 @@ contract LZIntegrationTest is IntegrationBaseTest {
         runCrossChainTests(getChain("bnb_smart_chain").createFork());
     }
 
-    function test_monad() public {
+    function test_monad_t() public {
         destinationEndpointId = LZForwarder.ENDPOINT_ID_MONAD;
         destinationEndpoint   = LZForwarder.ENDPOINT_MONAD;
 
@@ -171,7 +171,14 @@ contract LZIntegrationTest is IntegrationBaseTest {
 
         // MONAD-SPECIFIC WORKAROUND: Configure working DVNs to bypass placeholder deadDVNs
         // TODO: Remove this once Monad's LayerZero deployment is complete with real DVNs
-        MonadLZConfigHelpers.configureMonadDefaults(source, destination);
+        MonadLZConfigHelpers.configureMonadDefaults(
+            source,
+            sourceReceiver,
+            destination,
+            destinationReceiver,
+            sourceAuthority,
+            destinationAuthority
+        );
 
         executeTestingSequence();
     }
