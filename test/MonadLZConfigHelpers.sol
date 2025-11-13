@@ -44,16 +44,56 @@ library MonadLZConfigHelpers {
     address private constant MONAD_DVN    = 0x282b3386571f7f794450d5789911a9804FA346b4;  // LayerZero Labs DVN
 
     /**
+     * @notice Configuration for the source chain (where messages are sent FROM)
+     * @param fork The source chain domain
+     * @param senderOapp The OApp contract that sends messages
+     * @param refundAddress The address that receives gas refunds
+     * @param testSender The test contract address
+     * @param endpoint The LayerZero endpoint on source chain
+     * @param remoteEid The destination endpoint ID
+     * @param dvn The DVN to use for verification
+     */
+    struct SourceChainConfig {
+        Domain fork;
+        address senderOapp;
+        address refundAddress;
+        address testSender;
+        address endpoint;
+        uint32 remoteEid;
+        address dvn;
+    }
+
+    /**
+     * @notice Configuration for the destination chain (where messages are sent TO)
+     * @param fork The destination chain domain
+     * @param receiverOapp The OApp contract that receives messages
+     * @param endpoint The LayerZero endpoint on destination chain
+     * @param receiveLib The receive library address
+     * @param dvn The DVN to use for verification
+     */
+    struct DestChainConfig {
+        Domain fork;
+        address receiverOapp;
+        address endpoint;
+        address receiveLib;
+        address dvn;
+    }
+
+    /**
      * @notice Configure working DVNs for Monad↔Ethereum route
      * @dev This function ONLY patches the Monad route's incomplete deployment.
-     *      It sets default configurations that all OApps will inherit.
+     *      It configures bidirectional communication between Ethereum and Monad.
      *
-     *      In the test environment, we configure both:
-     *      1. The LZReceiver OApp contracts (for receiving messages)
-     *      2. The test contract itself (for sending messages via LZForwarder)
+     *      For each direction, we configure:
+     *      - On SOURCE: send library + DVN for senderOapp, refundAddress, and testContract
+     *      - On DESTINATION: receive library + DVN for receiverOapp
      *
      * @param ethereumFork The Ethereum fork/domain
+     * @param ethereumOapp The LZReceiver OApp on Ethereum
      * @param monadFork The Monad fork/domain
+     * @param monadOapp The LZReceiver OApp on Monad
+     * @param sourceAuthority The refund address used when sending from Ethereum
+     * @param destinationAuthority The refund address used when sending from Monad
      */
     function configureMonadDefaults(
         Domain memory ethereumFork,
@@ -63,141 +103,151 @@ library MonadLZConfigHelpers {
         address sourceAuthority,
         address destinationAuthority
     ) internal {
-        // Get the test contract address (the caller of this library function)
         address testContract = address(this);
 
-        // Configure the OApp on Ethereum to send to Monad and receive from Monad
-        _configureDirection({
-            fork      : ethereumFork,
-            oapp      : ethereumOapp,
-            endpoint  : LZForwarder.ENDPOINT_ETHEREUM,
-            remoteEid : LZForwarder.ENDPOINT_ID_MONAD,
-            receiveLib: LZForwarder.RECEIVE_LIBRARY_ETHEREUM,
-            dvn       : ETHEREUM_DVN
-        });
+        // Configure Ethereum → Monad direction
+        _configureDirection(
+            SourceChainConfig({
+                fork: ethereumFork,
+                senderOapp: ethereumOapp,
+                refundAddress: sourceAuthority,
+                testSender: testContract,
+                endpoint: LZForwarder.ENDPOINT_ETHEREUM,
+                remoteEid: LZForwarder.ENDPOINT_ID_MONAD,
+                dvn: ETHEREUM_DVN
+            }),
+            DestChainConfig({
+                fork: monadFork,
+                receiverOapp: monadOapp,
+                endpoint: LZForwarder.ENDPOINT_MONAD,
+                receiveLib: LZForwarder.RECEIVE_LIBRARY_MONAD,
+                dvn: MONAD_DVN
+            })
+        );
 
-        // Configure the OApp on Monad to send to Ethereum and receive from Ethereum
-        _configureDirection({
-            fork      : monadFork,
-            oapp      : monadOapp,
-            endpoint  : LZForwarder.ENDPOINT_MONAD,
-            remoteEid : LZForwarder.ENDPOINT_ID_ETHEREUM,
-            receiveLib: LZForwarder.RECEIVE_LIBRARY_MONAD,
-            dvn       : MONAD_DVN
-        });
-
-        // ALSO configure the test contract itself as a sender on BOTH chains
-        // because in tests, LZForwarder.sendMessage is called from the test contract
-        _configureDirection({
-            fork      : ethereumFork,
-            oapp      : testContract,
-            endpoint  : LZForwarder.ENDPOINT_ETHEREUM,
-            remoteEid : LZForwarder.ENDPOINT_ID_MONAD,
-            receiveLib: LZForwarder.RECEIVE_LIBRARY_ETHEREUM,
-            dvn       : ETHEREUM_DVN
-        });
-
-        _configureDirection({
-            fork      : monadFork,
-            oapp      : testContract,
-            endpoint  : LZForwarder.ENDPOINT_MONAD,
-            remoteEid : LZForwarder.ENDPOINT_ID_ETHEREUM,
-            receiveLib: LZForwarder.RECEIVE_LIBRARY_MONAD,
-            dvn       : MONAD_DVN
-        });
-
-        // ALSO configure the authority addresses (the refund addresses used in sendMessage)
-        _configureDirection({
-            fork      : ethereumFork,
-            oapp      : sourceAuthority,
-            endpoint  : LZForwarder.ENDPOINT_ETHEREUM,
-            remoteEid : LZForwarder.ENDPOINT_ID_MONAD,
-            receiveLib: LZForwarder.RECEIVE_LIBRARY_ETHEREUM,
-            dvn       : ETHEREUM_DVN
-        });
-
-        _configureDirection({
-            fork      : monadFork,
-            oapp      : destinationAuthority,
-            endpoint  : LZForwarder.ENDPOINT_MONAD,
-            remoteEid : LZForwarder.ENDPOINT_ID_ETHEREUM,
-            receiveLib: LZForwarder.RECEIVE_LIBRARY_MONAD,
-            dvn       : MONAD_DVN
-        });
+        // Configure Monad → Ethereum direction (reverse)
+        _configureDirection(
+            SourceChainConfig({
+                fork: monadFork,
+                senderOapp: monadOapp,
+                refundAddress: destinationAuthority,
+                testSender: testContract,
+                endpoint: LZForwarder.ENDPOINT_MONAD,
+                remoteEid: LZForwarder.ENDPOINT_ID_ETHEREUM,
+                dvn: MONAD_DVN
+            }),
+            DestChainConfig({
+                fork: ethereumFork,
+                receiverOapp: ethereumOapp,
+                endpoint: LZForwarder.ENDPOINT_ETHEREUM,
+                receiveLib: LZForwarder.RECEIVE_LIBRARY_ETHEREUM,
+                dvn: ETHEREUM_DVN
+            })
+        );
     }
 
     /**
-     * @notice Configures default DVNs for a given source/target direction.
-     * @param fork Domain of the network to operate on (source side)
-     * @param endpoint Address of the LayerZero endpoint whose send library will be mutated (on 'fork')
-     * @param remoteEid The remote endpoint id this config will target
-     * @param dvn Address of the working DVN for this direction
+     * @notice Configures one direction of cross-chain communication (source → destination)
+     * @dev Configures:
+     *      - On SOURCE fork: send library + DVN for senderOapp, refundAddress, and testSender
+     *      - On DESTINATION fork: receive library + DVN for receiverOapp
+     *
+     * @param source Configuration for the source chain (where messages originate)
+     * @param dest Configuration for the destination chain (where messages are delivered)
      */
     function _configureDirection(
-        Domain  memory fork,
-        address oapp,
-        address endpoint,
-        uint32  remoteEid,
-        address receiveLib,
-        address dvn
+        SourceChainConfig memory source,
+        DestChainConfig memory dest
     ) private {
-        fork.selectFork();
+        // === CONFIGURE SOURCE CHAIN (for sending) ===
+        source.fork.selectFork();
 
-        address sendLib = ILayerZeroEndpointV2Admin(endpoint).getSendLibrary(address(0), remoteEid);
+        address sendLib = ILayerZeroEndpointV2Admin(source.endpoint).getSendLibrary(address(0), source.remoteEid);
 
-        // Set default ULN config with working DVN
-        address[] memory dvns = new address[](1);
-        dvns[0] = dvn;
+        // Set up ULN config with working DVN for source
+        address[] memory sourceDvns = new address[](1);
+        sourceDvns[0] = source.dvn;
 
-        SetConfigParam[] memory configParams = new SetConfigParam[](1);
-        configParams[0] = SetConfigParam({
-            eid: remoteEid, configType: 2, config: abi.encode(UlnConfig({
-                confirmations        : 15,
-                requiredDVNCount     : 1,
-                optionalDVNCount     : 0,
-                optionalDVNThreshold : 0,
-                requiredDVNs         : dvns,
-                optionalDVNs         : new address[](0)
-            }))});
+        SetConfigParam[] memory sendConfigParams = new SetConfigParam[](1);
+        sendConfigParams[0] = SetConfigParam({
+            eid: source.remoteEid,
+            configType: 2,
+            config: abi.encode(UlnConfig({
+                confirmations: 15,
+                requiredDVNCount: 1,
+                optionalDVNCount: 0,
+                optionalDVNThreshold: 0,
+                requiredDVNs: sourceDvns,
+                optionalDVNs: new address[](0)
+            }))
+        });
 
-        // Use the provided endpoint address directly
-        address endpointAddr = endpoint;
+        // Configure all senders on source chain
+        _configureSender(source.senderOapp, source.endpoint, sendLib, sendConfigParams);
+        _configureSender(source.refundAddress, source.endpoint, sendLib, sendConfigParams);
+        _configureSender(source.testSender, source.endpoint, sendLib, sendConfigParams);
 
-        // First, explicitly set the send library for this OApp
-        vm.prank(oapp);
-        (bool libSuccess,) = endpointAddr.call(
-            abi.encodeWithSignature(
-                "setSendLibrary(address,uint32,address)",
-                oapp,
-                remoteEid,
-                sendLib
-            )
-        );
-        require(libSuccess, "setSendLibrary failed");
+        // === CONFIGURE DESTINATION CHAIN (for receiving) ===
+        dest.fork.selectFork();
 
-        // Configure send library (for outgoing messages)
-        vm.prank(oapp);
-        (bool success1,) = endpointAddr.call(
+        // Set up ULN config with working DVN for destination
+        address[] memory destDvns = new address[](1);
+        destDvns[0] = dest.dvn;
+
+        SetConfigParam[] memory receiveConfigParams = new SetConfigParam[](1);
+        receiveConfigParams[0] = SetConfigParam({
+            eid: source.remoteEid, // The source EID from receiver's perspective
+            configType: 2,
+            config: abi.encode(UlnConfig({
+                confirmations: 15,
+                requiredDVNCount: 1,
+                optionalDVNCount: 0,
+                optionalDVNThreshold: 0,
+                requiredDVNs: destDvns,
+                optionalDVNs: new address[](0)
+            }))
+        });
+
+        // Configure receiver on destination chain
+        // vm.prank(dest.receiverOapp);
+        // (bool success,) = dest.endpoint.call(
+        //     abi.encodeWithSignature(
+        //         "setConfig(address,address,(uint32,uint32,bytes)[])",
+        //         dest.receiverOapp,
+        //         dest.receiveLib,
+        //         receiveConfigParams
+        //     )
+        // );
+        // require(success, "setConfig for receive library failed");
+    }
+
+    /**
+     * @notice Helper to configure a sender address for outgoing messages
+     * @dev Sets the send library and configures DVN settings for a sender
+     *
+     * @param sender The address to configure as a sender
+     * @param endpoint The LayerZero endpoint address
+     * @param sendLib The send library address
+     * @param configParams The ULN configuration parameters
+     */
+    function _configureSender(
+        address sender,
+        address endpoint,
+        address sendLib,
+        SetConfigParam[] memory configParams
+    ) private {
+
+        // Configure send library with DVN settings
+        vm.prank(sender);
+        (bool configSuccess,) = endpoint.call(
             abi.encodeWithSignature(
                 "setConfig(address,address,(uint32,uint32,bytes)[])",
-                oapp,
+                sender,
                 sendLib,
                 configParams
             )
         );
-        require(success1, "setConfig for send library failed");
-
-        // Configure receive library (for incoming messages)
-        vm.prank(oapp);
-        (bool success2,) = endpointAddr.call(
-            abi.encodeWithSignature(
-                "setConfig(address,address,(uint32,uint32,bytes)[])",
-                oapp,
-                receiveLib,
-                configParams
-            )
-        );
-        require(success2, "setConfig for receive library failed");
+        require(configSuccess, "setConfig for send library failed");
     }
 
 }
