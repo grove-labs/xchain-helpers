@@ -4,6 +4,9 @@ pragma solidity ^0.8.0;
 import { IERC20 }    from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
+import { SetConfigParam } from "@layerzerolabs/lz-evm-protocol-v2/contracts/interfaces/IMessageLibManager.sol";
+import { UlnConfig }      from "@layerzerolabs/lz-evm-messagelib-v2/contracts/uln/UlnBase.sol";
+
 struct MessagingParams {
     uint32  dstEid;
     bytes32 receiver;
@@ -34,6 +37,15 @@ interface ILayerZeroEndpointV2 {
         MessagingParams calldata _params,
         address                  _sender
     ) external view returns (MessagingFee memory);
+    function getSendLibrary(
+        address sender,
+        uint32 dstEid
+    ) external view returns (address lib);
+    function setConfig(
+        address _oapp,
+        address _lib,
+        SetConfigParam[] calldata _params
+    ) external;
 }
 
 library LZForwarder {
@@ -98,6 +110,48 @@ library LZForwarder {
 
         // Pay LZ token fee by sending tokens to the endpoint.
         SafeERC20.safeTransfer(IERC20(lzToken), address(endpoint), _lzTokenFee);
+    }
+
+    /**
+     * @notice Configures a single sender for cross-chain communication
+     * @dev Caller must ensure msg.sender is authorized (either the sender itself or its delegate)
+     *      before calling this function (e.g., use vm.prank(sender) in tests)
+     *
+     * @param sender The address to configure as a sender
+     * @param endpoint The LayerZero endpoint address
+     * @param remoteEid The destination endpoint ID
+     * @param dvn The DVN to use for verification
+     */
+    function configureSender(
+        address sender,
+        address endpoint,
+        uint32 remoteEid,
+        address dvn
+    ) internal {
+        // Get send library (view call, doesn't consume prank)
+        address sendLib = ILayerZeroEndpointV2(endpoint).getSendLibrary(address(0), remoteEid);
+
+        address[] memory dvns = new address[](1);
+        dvns[0] = dvn;
+
+        UlnConfig memory ulnConfig = UlnConfig({
+            confirmations        : 15,
+            requiredDVNCount     : 1,
+            optionalDVNCount     : 0,
+            optionalDVNThreshold : 0,
+            requiredDVNs         : dvns,
+            optionalDVNs         : new address[](0)
+        });
+
+        SetConfigParam[] memory configParams = new SetConfigParam[](1);
+        configParams[0] = SetConfigParam({
+            eid        : remoteEid,
+            configType : 2,
+            config     : abi.encode(ulnConfig)
+        });
+
+        // This call will use the msg.sender set by prank
+        ILayerZeroEndpointV2(endpoint).setConfig(sender, sendLib, configParams);
     }
 
 }

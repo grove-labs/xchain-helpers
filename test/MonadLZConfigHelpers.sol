@@ -3,9 +3,6 @@ pragma solidity >=0.8.0;
 
 import { Vm } from "forge-std/Vm.sol";
 
-import { SetConfigParam } from "@layerzerolabs/lz-evm-protocol-v2/contracts/interfaces/IMessageLibManager.sol";
-import { UlnConfig } from "@layerzerolabs/lz-evm-messagelib-v2/contracts/uln/UlnBase.sol";
-
 import { LZForwarder } from "src/forwarders/LZForwarder.sol";
 
 import { Domain, DomainHelpers } from "src/testing/Domain.sol";
@@ -27,15 +24,6 @@ import { Domain, DomainHelpers } from "src/testing/Domain.sol";
  *      TODO: Remove this helper once Monad's LayerZero integration is complete
  *      and real DVNs are configured as defaults.
  */
-
-/**
- * @notice Minimal interface for LayerZero endpoint configuration
- * @dev Defines only the methods needed for DVN configuration
- */
-interface IEndpointConfig {
-    function getSendLibrary(address sender, uint32 dstEid) external view returns (address lib);
-    function setConfig(address _oapp, address _lib, SetConfigParam[] calldata _params) external;
-}
 
 library MonadLZConfigHelpers {
 
@@ -66,73 +54,43 @@ library MonadLZConfigHelpers {
 
         // Configure Ethereum → Monad direction
         ethereumFork.selectFork();
-        configureSender(
+        vm.startPrank(sourceAuthority);
+        LZForwarder.configureSender(
             sourceAuthority,
             LZForwarder.ENDPOINT_ETHEREUM,
             LZForwarder.ENDPOINT_ID_MONAD,
             LZForwarder.DVN_ETHEREUM
         );
-        configureSender(
+        vm.stopPrank();
+
+        vm.startPrank(testContract);
+        LZForwarder.configureSender(
             testContract,
             LZForwarder.ENDPOINT_ETHEREUM,
             LZForwarder.ENDPOINT_ID_MONAD,
             LZForwarder.DVN_ETHEREUM
         );
+        vm.stopPrank();
 
         // Configure Monad → Ethereum direction (reverse)
         monadFork.selectFork();
-        configureSender(
+        vm.startPrank(destinationAuthority);
+        LZForwarder.configureSender(
             destinationAuthority,
             LZForwarder.ENDPOINT_MONAD,
             LZForwarder.ENDPOINT_ID_ETHEREUM,
             LZForwarder.DVN_MONAD
         );
-        configureSender(
+        vm.stopPrank();
+
+        vm.startPrank(testContract);
+        LZForwarder.configureSender(
             testContract,
             LZForwarder.ENDPOINT_MONAD,
             LZForwarder.ENDPOINT_ID_ETHEREUM,
             LZForwarder.DVN_MONAD
         );
-    }
-
-    /**
-     * @notice Configures a single sender for cross-chain communication
-     * @dev Assumes the correct fork is already selected
-     *
-     * @param sender The address to configure as a sender
-     * @param endpoint The LayerZero endpoint address
-     * @param remoteEid The destination endpoint ID
-     * @param dvn The DVN to use for verification
-     */
-    function configureSender(
-        address sender,
-        address endpoint,
-        uint32 remoteEid,
-        address dvn
-    ) internal {
-        address sendLib = IEndpointConfig(endpoint).getSendLibrary(address(0), remoteEid);
-
-        address[] memory dvns = new address[](1);
-        dvns[0] = dvn;
-
-        UlnConfig memory ulnConfig = UlnConfig({
-            confirmations        : 15,
-            requiredDVNCount     : 1,
-            optionalDVNCount     : 0,
-            optionalDVNThreshold : 0,
-            requiredDVNs         : dvns,
-            optionalDVNs         : new address[](0)
-        });
-
-        SetConfigParam[] memory configParams = new SetConfigParam[](1);
-        configParams[0] = SetConfigParam({
-            eid        : remoteEid,
-            configType : 2,
-            config     : abi.encode(ulnConfig)
-        });
-
-        vm.prank(sender);
-        IEndpointConfig(endpoint).setConfig(sender, sendLib, configParams);
+        vm.stopPrank();
     }
 
 }
