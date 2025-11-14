@@ -173,9 +173,7 @@ contract LZIntegrationTest is IntegrationBaseTest {
         // TODO: Remove this once Monad's LayerZero deployment is complete with real DVNs
         MonadLZConfigHelpers.configureMonadDefaults(
             source,
-            sourceReceiver,
             destination,
-            destinationReceiver,
             sourceAuthority,
             destinationAuthority
         );
