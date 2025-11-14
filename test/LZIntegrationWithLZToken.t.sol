@@ -31,6 +31,9 @@ contract LZIntegrationTestWithLZToken is IntegrationBaseTest {
     address sourceEndpoint = LZForwarder.ENDPOINT_ETHEREUM;
     address destinationEndpoint;
 
+    address sourceDVN = LZForwarder.DVN_ETHEREUM;
+    address destinationDVN;
+
     address lzToken  = 0x6985884C4392D348587B19cb9eAAf157F13271cd;
     address lzOwner  = 0xBe010A7e3686FdF65E93344ab664D065A0B02478;
     address treasury = 0x5ebB3f2feaA15271101a927869B3A56837e73056;
@@ -53,6 +56,7 @@ contract LZIntegrationTestWithLZToken is IntegrationBaseTest {
     function test_base() public {
         destinationEndpointId = LZForwarder.ENDPOINT_ID_BASE;
         destinationEndpoint   = LZForwarder.ENDPOINT_BASE;
+        destinationDVN        = LZForwarder.DVN_BASE;
 
         runCrossChainTests(getChain("base").createFork());
     }
@@ -60,6 +64,7 @@ contract LZIntegrationTestWithLZToken is IntegrationBaseTest {
     function test_binance() public {
         destinationEndpointId = LZForwarder.ENDPOINT_ID_BNB;
         destinationEndpoint   = LZForwarder.ENDPOINT_BNB;
+        destinationDVN        = LZForwarder.DVN_BNB;
 
         runCrossChainTests(getChain("bnb_smart_chain").createFork());
     }
@@ -67,14 +72,15 @@ contract LZIntegrationTestWithLZToken is IntegrationBaseTest {
     function test_monad() public {
         destinationEndpointId = LZForwarder.ENDPOINT_ID_MONAD;
         destinationEndpoint   = LZForwarder.ENDPOINT_MONAD;
+        destinationDVN        = LZForwarder.DVN_MONAD;
 
-        // Configuration happens automatically in initSourceReceiver/initDestinationReceiver
         runCrossChainTests(getChain("monad").createFork());
     }
 
     function test_plasma() public {
         destinationEndpointId = LZForwarder.ENDPOINT_ID_PLASMA;
         destinationEndpoint   = LZForwarder.ENDPOINT_PLASMA;
+        destinationDVN        = LZForwarder.DVN_PLASMA;
 
         runCrossChainTests(getChain("plasma").createFork());
     }
@@ -85,14 +91,11 @@ contract LZIntegrationTestWithLZToken is IntegrationBaseTest {
         vm.etch(sourceAuthority, address(senderImpl).code);
         vm.deal(sourceAuthority, 1000 ether);
 
-        // Configure for Monad if needed (MONAD-SPECIFIC WORKAROUND)
-        if (destinationEndpointId == LZForwarder.ENDPOINT_ID_MONAD) {
-            MessageSender(payable(sourceAuthority)).configureSender(
-                LZForwarder.ENDPOINT_ETHEREUM,
-                LZForwarder.ENDPOINT_ID_MONAD,
-                LZForwarder.DVN_ETHEREUM
-            );
-        }
+        MessageSender(payable(sourceAuthority)).configureSender(
+            sourceEndpoint,
+            destinationEndpointId,
+            sourceDVN
+        );
 
         return address(new LZReceiver(
             sourceEndpoint,
@@ -105,19 +108,15 @@ contract LZIntegrationTestWithLZToken is IntegrationBaseTest {
     }
 
     function initDestinationReceiver() internal override returns (address) {
-        // Etch MessageSender at destinationAuthority
         MessageSender senderImpl = new MessageSender();
         vm.etch(destinationAuthority, address(senderImpl).code);
         vm.deal(destinationAuthority, 1000 ether);
 
-        // Configure for Monad if needed (MONAD-SPECIFIC WORKAROUND)
-        if (destinationEndpointId == LZForwarder.ENDPOINT_ID_MONAD) {
-            MessageSender(payable(destinationAuthority)).configureSender(
-                LZForwarder.ENDPOINT_MONAD,
-                LZForwarder.ENDPOINT_ID_ETHEREUM,
-                LZForwarder.DVN_MONAD
-            );
-        }
+        MessageSender(payable(destinationAuthority)).configureSender(
+            destinationEndpoint,
+            sourceEndpointId,
+            destinationDVN
+        );
 
         return address(new LZReceiver(
             destinationEndpoint,
