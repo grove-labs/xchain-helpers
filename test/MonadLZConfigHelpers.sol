@@ -3,7 +3,6 @@ pragma solidity >=0.8.0;
 
 import { Vm } from "forge-std/Vm.sol";
 
-import { IOAppCore } from "layerzerolabs/oapp-evm/contracts/oapp/interfaces/IOAppCore.sol";
 import { SetConfigParam } from "@layerzerolabs/lz-evm-protocol-v2/contracts/interfaces/IMessageLibManager.sol";
 import { UlnConfig } from "@layerzerolabs/lz-evm-messagelib-v2/contracts/uln/UlnBase.sol";
 
@@ -29,14 +28,13 @@ import { Domain, DomainHelpers } from "src/testing/Domain.sol";
  *      and real DVNs are configured as defaults.
  */
 
-interface ILayerZeroEndpointV2Admin {
+/**
+ * @notice Minimal interface for LayerZero endpoint configuration
+ * @dev Defines only the methods needed for DVN configuration
+ */
+interface IEndpointConfig {
     function getSendLibrary(address sender, uint32 dstEid) external view returns (address lib);
-    function getConfig(
-        address _oapp,
-        address _lib,
-        uint32 _eid,
-        uint32 _configType
-    ) external view returns (bytes memory config);
+    function setConfig(address _oapp, address _lib, SetConfigParam[] calldata _params) external;
 }
 
 library MonadLZConfigHelpers {
@@ -126,57 +124,35 @@ library MonadLZConfigHelpers {
         // === CONFIGURE SOURCE CHAIN (for sending) ===
         source.fork.selectFork();
 
-        address sendLib = ILayerZeroEndpointV2Admin(source.endpoint).getSendLibrary(address(0), source.remoteEid);
+        address sendLib = IEndpointConfig(source.endpoint).getSendLibrary(address(0), source.remoteEid);
 
         // Set up ULN config with working DVN for source
         address[] memory sourceDvns = new address[](1);
         sourceDvns[0] = source.dvn;
 
-        SetConfigParam[] memory sendConfigParams = new SetConfigParam[](1);
-        sendConfigParams[0] = SetConfigParam({
+        UlnConfig memory ulnConfig = UlnConfig({
+            confirmations: 15,
+            requiredDVNCount: 1,
+            optionalDVNCount: 0,
+            optionalDVNThreshold: 0,
+            requiredDVNs: sourceDvns,
+            optionalDVNs: new address[](0)
+        });
+
+        // Create config params array (same for all senders)
+        SetConfigParam[] memory configParams = new SetConfigParam[](1);
+        configParams[0] = SetConfigParam({
             eid: source.remoteEid,
             configType: 2,
-            config: abi.encode(UlnConfig({
-                confirmations: 15,
-                requiredDVNCount: 1,
-                optionalDVNCount: 0,
-                optionalDVNThreshold: 0,
-                requiredDVNs: sourceDvns,
-                optionalDVNs: new address[](0)
-            }))
+            config: abi.encode(ulnConfig)
         });
 
         // Configure all addresses that interact with the endpoint
-        _configureSender(source.refundAddress, source.endpoint, sendLib, sendConfigParams);
-        _configureSender(source.testSender, source.endpoint, sendLib, sendConfigParams);
-    }
+        vm.prank(source.refundAddress);
+        IEndpointConfig(source.endpoint).setConfig(source.refundAddress, sendLib, configParams);
 
-    /**
-     * @notice Helper to configure a sender address for outgoing messages
-     * @dev Sets send library DVN configuration for a single sender
-     *
-     * @param sender The address to configure
-     * @param endpoint The LayerZero endpoint address
-     * @param sendLib The send library address
-     * @param configParams The ULN configuration parameters
-     */
-    function _configureSender(
-        address sender,
-        address endpoint,
-        address sendLib,
-        SetConfigParam[] memory configParams
-    ) private {
-        // Configure send library with DVN settings
-        vm.prank(sender);
-        (bool configSuccess,) = endpoint.call(
-            abi.encodeWithSignature(
-                "setConfig(address,address,(uint32,uint32,bytes)[])",
-                sender,
-                sendLib,
-                configParams
-            )
-        );
-        require(configSuccess, "setConfig for send library failed");
+        vm.prank(source.testSender);
+        IEndpointConfig(source.endpoint).setConfig(source.testSender, sendLib, configParams);
     }
 
 }
