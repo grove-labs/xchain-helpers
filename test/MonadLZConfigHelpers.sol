@@ -4,6 +4,7 @@ pragma solidity >=0.8.0;
 import { Vm } from "forge-std/Vm.sol";
 
 import { LZForwarder } from "src/forwarders/LZForwarder.sol";
+import { MessageSender } from "test/mocks/MessageSender.sol";
 
 import { Domain, DomainHelpers } from "src/testing/Domain.sol";
 
@@ -36,13 +37,14 @@ library MonadLZConfigHelpers {
      * @dev This function ONLY patches the Monad route's incomplete deployment.
      *      It configures bidirectional communication between Ethereum and Monad.
      *
-     *      For each direction, we configure:
-     *      - Send library + DVN for authority address and test contract
+     *      The authority addresses are MessageSender contracts that configure themselves
+     *      using configureSenderSelf() - matching the production delegatecall pattern.
+     *      No test contract configuration needed!
      *
      * @param ethereumFork The Ethereum fork/domain
      * @param monadFork The Monad fork/domain
-     * @param sourceAuthority The authority address on Ethereum
-     * @param destinationAuthority The authority address on Monad
+     * @param sourceAuthority The MessageSender contract on Ethereum
+     * @param destinationAuthority The MessageSender contract on Monad
      */
     function configureMonadDefaults(
         Domain memory ethereumFork,
@@ -50,47 +52,21 @@ library MonadLZConfigHelpers {
         address sourceAuthority,
         address destinationAuthority
     ) internal {
-        address testContract = address(this);
-
-        // Configure Ethereum → Monad direction
+        // Configure Ethereum → Monad direction (sourceAuthority sends)
         ethereumFork.selectFork();
-
-        vm.startPrank(sourceAuthority);
-        LZForwarder.configureSender(
-            sourceAuthority,
+        MessageSender(payable(sourceAuthority)).configureSender(
             LZForwarder.ENDPOINT_ETHEREUM,
             LZForwarder.ENDPOINT_ID_MONAD,
             LZForwarder.DVN_ETHEREUM
         );
-        vm.stopPrank();
 
-        vm.startPrank(testContract);
-        LZForwarder.configureSenderSelf(
-            LZForwarder.ENDPOINT_ETHEREUM,
-            LZForwarder.ENDPOINT_ID_MONAD,
-            LZForwarder.DVN_ETHEREUM
-        );
-        vm.stopPrank();
-
-        // Configure Monad → Ethereum direction (reverse)
+        // Configure Monad → Ethereum direction (destinationAuthority sends)
         monadFork.selectFork();
-
-        vm.startPrank(destinationAuthority);
-        LZForwarder.configureSender(
-            destinationAuthority,
+        MessageSender(payable(destinationAuthority)).configureSender(
             LZForwarder.ENDPOINT_MONAD,
             LZForwarder.ENDPOINT_ID_ETHEREUM,
             LZForwarder.DVN_MONAD
         );
-        vm.stopPrank();
-
-        vm.startPrank(testContract);
-        LZForwarder.configureSenderSelf(
-            LZForwarder.ENDPOINT_MONAD,
-            LZForwarder.ENDPOINT_ID_ETHEREUM,
-            LZForwarder.DVN_MONAD
-        );
-        vm.stopPrank();
     }
 
 }

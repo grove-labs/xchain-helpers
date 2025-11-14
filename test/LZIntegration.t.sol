@@ -6,9 +6,11 @@ import "./MonadLZConfigHelpers.sol";
 
 import { OptionsBuilder } from "layerzerolabs/oapp-evm/contracts/oapp/libs/OptionsBuilder.sol";
 
-import { LZBridgeTesting }                   from "src/testing/bridges/LZBridgeTesting.sol";
-import { LZForwarder, ILayerZeroEndpointV2 } from "src/forwarders/LZForwarder.sol";
-import { LZReceiver, Origin }                from "src/receivers/LZReceiver.sol";
+import { LZBridgeTesting }                             from "src/testing/bridges/LZBridgeTesting.sol";
+import { LZForwarder, ILayerZeroEndpointV2,
+         MessagingParams, MessagingFee }               from "src/forwarders/LZForwarder.sol";
+import { LZReceiver, Origin }                          from "src/receivers/LZReceiver.sol";
+import { MessageSender }                               from "test/mocks/MessageSender.sol";
 
 import { RecordedLogs } from "src/testing/utils/RecordedLogs.sol";
 
@@ -30,6 +32,22 @@ contract LZIntegrationTest is IntegrationBaseTest {
     error NoPeer(uint32 eid);
     error OnlyEndpoint(address addr);
     error OnlyPeer(uint32 eid, bytes32 sender);
+
+    function setUp() public override {
+        super.setUp();
+
+        // Deploy MessageSender and etch it at authority addresses
+        // This makes the authorities actual senders, not just refund addresses
+        MessageSender senderImpl = new MessageSender();
+        bytes memory senderCode = address(senderImpl).code;
+
+        source.selectFork();
+        vm.etch(sourceAuthority, senderCode);
+        vm.deal(sourceAuthority, 1000 ether);
+
+        // Note: We can't etch on destination yet as it's not initialized
+        // We'll do it in each test after initBaseContracts
+    }
 
     function test_invalidEndpoint() public {
         destinationEndpointId = LZForwarder.ENDPOINT_ID_BASE;
@@ -153,14 +171,18 @@ contract LZIntegrationTest is IntegrationBaseTest {
         destinationEndpointId = LZForwarder.ENDPOINT_ID_BASE;
         destinationEndpoint   = LZForwarder.ENDPOINT_BASE;
 
-        runCrossChainTests(getChain("base").createFork());
+        initBaseContracts(getChain("base").createFork());
+        _setupDestinationAuthority();
+        executeTestingSequence();
     }
 
     function test_binance() public {
         destinationEndpointId = LZForwarder.ENDPOINT_ID_BNB;
         destinationEndpoint   = LZForwarder.ENDPOINT_BNB;
 
-        runCrossChainTests(getChain("bnb_smart_chain").createFork());
+        initBaseContracts(getChain("bnb_smart_chain").createFork());
+        _setupDestinationAuthority();
+        executeTestingSequence();
     }
 
     function test_monad_t() public {
@@ -168,6 +190,9 @@ contract LZIntegrationTest is IntegrationBaseTest {
         destinationEndpoint   = LZForwarder.ENDPOINT_MONAD;
 
         initBaseContracts(getChain("monad").createFork());
+
+        // Setup destinationAuthority as a MessageSender
+        _setupDestinationAuthority();
 
         // MONAD-SPECIFIC WORKAROUND: Configure working DVNs to bypass placeholder deadDVNs
         // TODO: Remove this once Monad's LayerZero deployment is complete with real DVNs
@@ -185,7 +210,9 @@ contract LZIntegrationTest is IntegrationBaseTest {
         destinationEndpointId = LZForwarder.ENDPOINT_ID_PLASMA;
         destinationEndpoint   = LZForwarder.ENDPOINT_PLASMA;
 
-        runCrossChainTests(getChain("plasma").createFork());
+        initBaseContracts(getChain("plasma").createFork());
+        _setupDestinationAuthority();
+        executeTestingSequence();
     }
 
     function initSourceReceiver() internal override returns (address) {
@@ -214,34 +241,64 @@ contract LZIntegrationTest is IntegrationBaseTest {
         return LZBridgeTesting.createLZBridge(source, destination);
     }
 
+    function _setupDestinationAuthority() internal {
+        // Etch MessageSender at destinationAuthority on destination fork
+        destination.selectFork();
+        MessageSender senderImpl = new MessageSender();
+        vm.etch(destinationAuthority, address(senderImpl).code);
+        vm.deal(destinationAuthority, 1000 ether);
+    }
+
     function queueSourceToDestination(bytes memory message) internal override {
-        vm.deal(sourceAuthority, 1000 ether);  // Gas to queue message
+        source.selectFork();
 
         bytes memory options = OptionsBuilder.newOptions().addExecutorLzReceiveOption(200_000, 0);
 
-        LZForwarder.sendMessage(
+        // Calculate fee
+        MessagingParams memory params = MessagingParams({
+            dstEid:       destinationEndpointId,
+            receiver:     bytes32(uint256(uint160(destinationReceiver))),
+            message:      message,
+            options:      options,
+            payInLzToken: false
+        });
+        MessagingFee memory fee = ILayerZeroEndpointV2(bridge.sourceCrossChainMessenger).quote(params, sourceAuthority);
+
+        // Call through the MessageSender contract (sourceAuthority)
+        MessageSender(payable(sourceAuthority)).sendMessage{value: fee.nativeFee}(
             destinationEndpointId,
             bytes32(uint256(uint160(destinationReceiver))),
-            ILayerZeroEndpointV2(bridge.sourceCrossChainMessenger),
+            bridge.sourceCrossChainMessenger,
             message,
             options,
-            address(this),
+            sourceAuthority,
             false
         );
     }
 
     function queueDestinationToSource(bytes memory message) internal override {
-        vm.deal(destinationAuthority, 1000 ether);  // Gas to queue message
+        destination.selectFork();
 
         bytes memory options = OptionsBuilder.newOptions().addExecutorLzReceiveOption(200_000, 0);
 
-        LZForwarder.sendMessage(
+        // Calculate fee
+        MessagingParams memory params = MessagingParams({
+            dstEid:       sourceEndpointId,
+            receiver:     bytes32(uint256(uint160(sourceReceiver))),
+            message:      message,
+            options:      options,
+            payInLzToken: false
+        });
+        MessagingFee memory fee = ILayerZeroEndpointV2(bridge.destinationCrossChainMessenger).quote(params, destinationAuthority);
+
+        // Call through the MessageSender contract (destinationAuthority)
+        MessageSender(payable(destinationAuthority)).sendMessage{value: fee.nativeFee}(
             sourceEndpointId,
             bytes32(uint256(uint160(sourceReceiver))),
-            ILayerZeroEndpointV2(bridge.destinationCrossChainMessenger),
+            bridge.destinationCrossChainMessenger,
             message,
             options,
-            address(this),
+            destinationAuthority,
             false
         );
     }
