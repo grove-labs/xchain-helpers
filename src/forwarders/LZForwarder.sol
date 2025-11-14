@@ -61,6 +61,13 @@ library LZForwarder {
     address public constant RECEIVE_LIBRARY_MONAD     = 0xe1844c5D63a9543023008D332Bd3d2e6f1FE1043;
     address public constant RECEIVE_LIBRARY_PLASMA    = 0xe1844c5D63a9543023008D332Bd3d2e6f1FE1043;
 
+    address public constant DVN_ETHEREUM  = 0x589dEDbD617e0CBcB916A9223F4d1300c294236b;
+    address public constant DVN_AVALANCHE = 0x0000000000000000000000000000000000000000;
+    address public constant DVN_BASE      = 0x0000000000000000000000000000000000000000;
+    address public constant DVN_BNB       = 0x0000000000000000000000000000000000000000;
+    address public constant DVN_MONAD     = 0x282b3386571f7f794450d5789911a9804FA346b4;
+    address public constant DVN_PLASMA    = 0x0000000000000000000000000000000000000000;
+
     function sendMessage(
         uint32               _dstEid,
         bytes32              _receiver,
