@@ -47,7 +47,7 @@ contract PacketBytesHelper {
     function guid(bytes calldata packetBytes) external pure returns (bytes32) {
         return PacketV1Codec.guid(packetBytes);
     }
-    
+
     function message(bytes calldata packetBytes) external pure returns (bytes memory) {
         return PacketV1Codec.message(packetBytes);
     }
@@ -78,14 +78,16 @@ library LZBridgeTesting {
 
     function getLZEndpointFromChainAlias(string memory chainAlias) internal pure returns (address) {
         bytes32 name = keccak256(bytes(chainAlias));
-        if (name == keccak256("mainnet")) {
+               if (name == keccak256("mainnet")) {
             return LZForwarder.ENDPOINT_ETHEREUM;
+        } else if (name == keccak256("avalanche")) {
+            return LZForwarder.ENDPOINT_AVALANCHE;
         } else if (name == keccak256("base")) {
             return LZForwarder.ENDPOINT_BASE;
         } else if (name == keccak256("bnb_smart_chain")) {
             return LZForwarder.ENDPOINT_BNB;
-        } else if (name == keccak256("avalanche")) {
-            return LZForwarder.ENDPOINT_AVALANCHE;
+        } else if (name == keccak256("monad")) {
+            return LZForwarder.ENDPOINT_MONAD;
         } else if (name == keccak256("plasma")) {
             return LZForwarder.ENDPOINT_PLASMA;
         } else {
@@ -95,14 +97,16 @@ library LZBridgeTesting {
 
     function getReceiveLibraryFromChainAlias(string memory chainAlias) internal pure returns (address) {
         bytes32 name = keccak256(bytes(chainAlias));
-        if (name == keccak256("mainnet")) {
+               if (name == keccak256("mainnet")) {
             return LZForwarder.RECEIVE_LIBRARY_ETHEREUM;
+        } else if (name == keccak256("avalanche")) {
+            return LZForwarder.RECEIVE_LIBRARY_AVALANCHE;
         } else if (name == keccak256("base")) {
             return LZForwarder.RECEIVE_LIBRARY_BASE;
         } else if (name == keccak256("bnb_smart_chain")) {
             return LZForwarder.RECEIVE_LIBRARY_BNB;
-        } else if (name == keccak256("avalanche")) {
-            return LZForwarder.RECEIVE_LIBRARY_AVALANCHE;
+        } else if (name == keccak256("monad")) {
+            return LZForwarder.RECEIVE_LIBRARY_MONAD;
         } else if (name == keccak256("plasma")) {
             return LZForwarder.RECEIVE_LIBRARY_PLASMA;
         } else {

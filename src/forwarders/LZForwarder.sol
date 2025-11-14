@@ -4,6 +4,9 @@ pragma solidity ^0.8.0;
 import { IERC20 }    from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
+import { SetConfigParam } from "@layerzerolabs/lz-evm-protocol-v2/contracts/interfaces/IMessageLibManager.sol";
+import { UlnConfig }      from "@layerzerolabs/lz-evm-messagelib-v2/contracts/uln/UlnBase.sol";
+
 struct MessagingParams {
     uint32  dstEid;
     bytes32 receiver;
@@ -34,29 +37,48 @@ interface ILayerZeroEndpointV2 {
         MessagingParams calldata _params,
         address                  _sender
     ) external view returns (MessagingFee memory);
+    function getSendLibrary(
+        address sender,
+        uint32 dstEid
+    ) external view returns (address lib);
+    function setConfig(
+        address _oapp,
+        address _lib,
+        SetConfigParam[] calldata _params
+    ) external;
 }
 
 library LZForwarder {
 
     error LzTokenUnavailable();
 
+    uint32 public constant ENDPOINT_ID_ETHEREUM  = 30101;
     uint32 public constant ENDPOINT_ID_AVALANCHE = 30106;
     uint32 public constant ENDPOINT_ID_BASE      = 30184;
     uint32 public constant ENDPOINT_ID_BNB       = 30102;
-    uint32 public constant ENDPOINT_ID_ETHEREUM  = 30101;
+    uint32 public constant ENDPOINT_ID_MONAD     = 30390;
     uint32 public constant ENDPOINT_ID_PLASMA    = 30383;
 
+    address public constant ENDPOINT_ETHEREUM  = 0x1a44076050125825900e736c501f859c50fE728c;
     address public constant ENDPOINT_AVALANCHE = 0x1a44076050125825900e736c501f859c50fE728c;
     address public constant ENDPOINT_BASE      = 0x1a44076050125825900e736c501f859c50fE728c;
     address public constant ENDPOINT_BNB       = 0x1a44076050125825900e736c501f859c50fE728c;
-    address public constant ENDPOINT_ETHEREUM  = 0x1a44076050125825900e736c501f859c50fE728c;
+    address public constant ENDPOINT_MONAD     = 0x6F475642a6e85809B1c36Fa62763669b1b48DD5B;
     address public constant ENDPOINT_PLASMA    = 0x6F475642a6e85809B1c36Fa62763669b1b48DD5B;
 
+    address public constant RECEIVE_LIBRARY_ETHEREUM  = 0xc02Ab410f0734EFa3F14628780e6e695156024C2;
     address public constant RECEIVE_LIBRARY_AVALANCHE = 0xbf3521d309642FA9B1c91A08609505BA09752c61;
     address public constant RECEIVE_LIBRARY_BASE      = 0xc70AB6f32772f59fBfc23889Caf4Ba3376C84bAf;
     address public constant RECEIVE_LIBRARY_BNB       = 0xB217266c3A98C8B2709Ee26836C98cf12f6cCEC1;
-    address public constant RECEIVE_LIBRARY_ETHEREUM  = 0xc02Ab410f0734EFa3F14628780e6e695156024C2;
+    address public constant RECEIVE_LIBRARY_MONAD     = 0xe1844c5D63a9543023008D332Bd3d2e6f1FE1043;
     address public constant RECEIVE_LIBRARY_PLASMA    = 0xe1844c5D63a9543023008D332Bd3d2e6f1FE1043;
+
+    address public constant DVN_ETHEREUM  = 0x589dEDbD617e0CBcB916A9223F4d1300c294236b; // LayerZero Labs
+    address public constant DVN_AVALANCHE = 0x0Ffe02DF012299A370D5dd69298A5826EAcaFdF8; // LayerZero Labs
+    address public constant DVN_BASE      = 0xB1473AC9f58FB27597a21710da9D1071841E8163; // LayerZero Labs
+    address public constant DVN_BNB       = 0x509889389cfB7A89850017425810116A44676F58; // LayerZero Labs
+    address public constant DVN_MONAD     = 0x282b3386571f7f794450d5789911a9804FA346b4; // LayerZero Labs
+    address public constant DVN_PLASMA    = 0xE5BFfd46776251b70895517D4AB635a640dA61E9; // LayerZero Labs
 
     function sendMessage(
         uint32               _dstEid,
@@ -88,6 +110,41 @@ library LZForwarder {
 
         // Pay LZ token fee by sending tokens to the endpoint.
         SafeERC20.safeTransfer(IERC20(lzToken), address(endpoint), _lzTokenFee);
+    }
+
+    /**
+     * @notice Configures this contract (via address(this)) as a LayerZero sender for cross-chain messaging to a specific remote endpoint.
+     * @dev Allows this contract to configure itself as a LayerZero sender for a specified remote endpoint.
+     *      Registers the appropriate send library and ULN configuration needed for cross-chain messaging to the target remote endpoint.
+     *
+     * @param endpoint   The LayerZero endpoint to configure
+     * @param remoteEid  The remote (destination) endpoint ID to enable messaging to
+     * @param dvns       The DVN addresses required for message verification
+     */
+    function configureSender(
+        address endpoint,
+        uint32 remoteEid,
+        address[] memory dvns
+    ) internal {
+        address sendLib = ILayerZeroEndpointV2(endpoint).getSendLibrary(address(0), remoteEid);
+
+        UlnConfig memory ulnConfig = UlnConfig({
+            confirmations        : 15,
+            requiredDVNCount     : uint8(dvns.length),
+            optionalDVNCount     : 0,
+            optionalDVNThreshold : 0,
+            requiredDVNs         : dvns,
+            optionalDVNs         : new address[](0)
+        });
+
+        SetConfigParam[] memory configParams = new SetConfigParam[](1);
+        configParams[0] = SetConfigParam({
+            eid        : remoteEid,
+            configType : 2,
+            config     : abi.encode(ulnConfig)
+        });
+
+        ILayerZeroEndpointV2(endpoint).setConfig(address(this), sendLib, configParams);
     }
 
 }

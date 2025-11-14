@@ -5,10 +5,12 @@ import { IERC20 } from "forge-std/interfaces/IERC20.sol";
 
 import { OptionsBuilder } from "layerzerolabs/oapp-evm/contracts/oapp/libs/OptionsBuilder.sol";
 
-import { LZBridgeTesting }                   from "src/testing/bridges/LZBridgeTesting.sol";
-import { LZForwarder, ILayerZeroEndpointV2 } from "src/forwarders/LZForwarder.sol";
-import { LZReceiver, Origin }                from "src/receivers/LZReceiver.sol";
-import { RecordedLogs }                      from "src/testing/utils/RecordedLogs.sol";
+import { LZBridgeTesting }                             from "src/testing/bridges/LZBridgeTesting.sol";
+import { LZForwarder, ILayerZeroEndpointV2,
+         MessagingParams, MessagingFee }               from "src/forwarders/LZForwarder.sol";
+import { LZReceiver, Origin }                          from "src/receivers/LZReceiver.sol";
+import { MessageSender }                               from "test/mocks/MessageSender.sol";
+import { RecordedLogs }                                from "src/testing/utils/RecordedLogs.sol";
 
 import "./IntegrationBase.t.sol";
 
@@ -28,6 +30,9 @@ contract LZIntegrationTestWithLZToken is IntegrationBaseTest {
 
     address sourceEndpoint = LZForwarder.ENDPOINT_ETHEREUM;
     address destinationEndpoint;
+
+    address sourceDVN = LZForwarder.DVN_ETHEREUM;
+    address destinationDVN;
 
     address lzToken  = 0x6985884C4392D348587B19cb9eAAf157F13271cd;
     address lzOwner  = 0xBe010A7e3686FdF65E93344ab664D065A0B02478;
@@ -51,6 +56,7 @@ contract LZIntegrationTestWithLZToken is IntegrationBaseTest {
     function test_base() public {
         destinationEndpointId = LZForwarder.ENDPOINT_ID_BASE;
         destinationEndpoint   = LZForwarder.ENDPOINT_BASE;
+        destinationDVN        = LZForwarder.DVN_BASE;
 
         runCrossChainTests(getChain("base").createFork());
     }
@@ -58,18 +64,39 @@ contract LZIntegrationTestWithLZToken is IntegrationBaseTest {
     function test_binance() public {
         destinationEndpointId = LZForwarder.ENDPOINT_ID_BNB;
         destinationEndpoint   = LZForwarder.ENDPOINT_BNB;
+        destinationDVN        = LZForwarder.DVN_BNB;
 
         runCrossChainTests(getChain("bnb_smart_chain").createFork());
+    }
+
+    function test_monad() public {
+        destinationEndpointId = LZForwarder.ENDPOINT_ID_MONAD;
+        destinationEndpoint   = LZForwarder.ENDPOINT_MONAD;
+        destinationDVN        = LZForwarder.DVN_MONAD;
+
+        runCrossChainTests(getChain("monad").createFork());
     }
 
     function test_plasma() public {
         destinationEndpointId = LZForwarder.ENDPOINT_ID_PLASMA;
         destinationEndpoint   = LZForwarder.ENDPOINT_PLASMA;
+        destinationDVN        = LZForwarder.DVN_PLASMA;
 
         runCrossChainTests(getChain("plasma").createFork());
     }
 
     function initSourceReceiver() internal override returns (address) {
+        // Etch MessageSender at sourceAuthority
+        MessageSender senderImpl = new MessageSender();
+        vm.etch(sourceAuthority, address(senderImpl).code);
+        vm.deal(sourceAuthority, 1000 ether);
+
+        MessageSender(payable(sourceAuthority)).configureSender(
+            sourceEndpoint,
+            destinationEndpointId,
+            sourceDVN
+        );
+
         return address(new LZReceiver(
             sourceEndpoint,
             destinationEndpointId,
@@ -81,6 +108,16 @@ contract LZIntegrationTestWithLZToken is IntegrationBaseTest {
     }
 
     function initDestinationReceiver() internal override returns (address) {
+        MessageSender senderImpl = new MessageSender();
+        vm.etch(destinationAuthority, address(senderImpl).code);
+        vm.deal(destinationAuthority, 1000 ether);
+
+        MessageSender(payable(destinationAuthority)).configureSender(
+            destinationEndpoint,
+            sourceEndpointId,
+            destinationDVN
+        );
+
         return address(new LZReceiver(
             destinationEndpoint,
             sourceEndpointId,
@@ -96,6 +133,8 @@ contract LZIntegrationTestWithLZToken is IntegrationBaseTest {
     }
 
     function queueSourceToDestination(bytes memory message) internal override {
+        source.selectFork();
+
         // Gas to queue message
         vm.deal(sourceAuthority, 1 ether);
         deal(lzToken, sourceAuthority, 1 ether);
@@ -105,10 +144,21 @@ contract LZIntegrationTestWithLZToken is IntegrationBaseTest {
         assertEq(IERC20(lzToken).balanceOf(address(sourceAuthority)), 1 ether);
         assertEq(address(sourceAuthority).balance,                    1 ether);
 
-        LZForwarder.sendMessage(
+        // Calculate fee
+        MessagingParams memory params = MessagingParams({
+            dstEid:       destinationEndpointId,
+            receiver:     bytes32(uint256(uint160(destinationReceiver))),
+            message:      message,
+            options:      options,
+            payInLzToken: true
+        });
+        MessagingFee memory fee = ILayerZeroEndpointV2(bridge.sourceCrossChainMessenger).quote(params, sourceAuthority);
+
+        // Call through the MessageSender contract (sourceAuthority)
+        MessageSender(payable(sourceAuthority)).sendMessage{value: fee.nativeFee}(
             destinationEndpointId,
             bytes32(uint256(uint160(destinationReceiver))),
-            ILayerZeroEndpointV2(bridge.sourceCrossChainMessenger),
+            bridge.sourceCrossChainMessenger,
             message,
             options,
             sourceAuthority,
@@ -121,14 +171,27 @@ contract LZIntegrationTestWithLZToken is IntegrationBaseTest {
     }
 
     function queueDestinationToSource(bytes memory message) internal override {
+        destination.selectFork();
+
         vm.deal(destinationAuthority, 1000 ether); // Gas to queue message
 
         bytes memory options = OptionsBuilder.newOptions().addExecutorLzReceiveOption(200_000, 0);
 
-        LZForwarder.sendMessage(
+        // Calculate fee
+        MessagingParams memory params = MessagingParams({
+            dstEid:       sourceEndpointId,
+            receiver:     bytes32(uint256(uint160(sourceReceiver))),
+            message:      message,
+            options:      options,
+            payInLzToken: false
+        });
+        MessagingFee memory fee = ILayerZeroEndpointV2(bridge.destinationCrossChainMessenger).quote(params, destinationAuthority);
+
+        // Call through the MessageSender contract (destinationAuthority)
+        MessageSender(payable(destinationAuthority)).sendMessage{value: fee.nativeFee}(
             sourceEndpointId,
             bytes32(uint256(uint160(sourceReceiver))),
-            ILayerZeroEndpointV2(bridge.destinationCrossChainMessenger),
+            bridge.destinationCrossChainMessenger,
             message,
             options,
             destinationAuthority,
