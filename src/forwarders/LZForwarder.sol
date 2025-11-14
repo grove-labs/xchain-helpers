@@ -119,21 +119,18 @@ library LZForwarder {
      *
      * @param endpoint   The LayerZero endpoint to configure
      * @param remoteEid  The remote (destination) endpoint ID to enable messaging to
-     * @param dvn        The DVN address required for message verification
+     * @param dvns       The DVN addresses required for message verification
      */
     function configureSender(
         address endpoint,
         uint32 remoteEid,
-        address dvn
+        address[] memory dvns
     ) internal {
         address sendLib = ILayerZeroEndpointV2(endpoint).getSendLibrary(address(0), remoteEid);
 
-        address[] memory dvns = new address[](1);
-        dvns[0] = dvn;
-
         UlnConfig memory ulnConfig = UlnConfig({
             confirmations        : 15,
-            requiredDVNCount     : 1,
+            requiredDVNCount     : uint8(dvns.length),
             optionalDVNCount     : 0,
             optionalDVNThreshold : 0,
             requiredDVNs         : dvns,

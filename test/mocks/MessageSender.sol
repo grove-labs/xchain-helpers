@@ -21,7 +21,10 @@ contract MessageSender {
         uint32 remoteEid,
         address dvn
     ) external {
-        LZForwarder.configureSender(endpoint, remoteEid, dvn);
+        address[] memory dvns = new address[](1);
+        dvns[0] = dvn;
+
+        LZForwarder.configureSender(endpoint, remoteEid, dvns);
     }
 
     /**
