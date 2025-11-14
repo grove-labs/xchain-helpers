@@ -113,55 +113,19 @@ library LZForwarder {
     }
 
     /**
-     * @notice Configures a single sender for cross-chain communication
-     * @dev Caller must ensure msg.sender is authorized (either the sender itself or its delegate)
-     *      before calling this function (e.g., use vm.prank(sender) in tests)
+     * @notice Configures this contract (via address(this)) as a LayerZero sender for cross-chain messaging to a specific remote endpoint.
+     * @dev Allows this contract to configure itself as a LayerZero sender for a specified remote endpoint.
+     *      Registers the appropriate send library and ULN configuration needed for cross-chain messaging to the target remote endpoint.
      *
-     * @param sender The address to configure as a sender
-     * @param endpoint The LayerZero endpoint address
-     * @param remoteEid The destination endpoint ID
-     * @param dvn The DVN to use for verification
+     * @param endpoint   The LayerZero endpoint to configure
+     * @param remoteEid  The remote (destination) endpoint ID to enable messaging to
+     * @param dvn        The DVN address required for message verification
      */
     function configureSender(
-        address sender,
         address endpoint,
         uint32 remoteEid,
         address dvn
     ) internal {
-        _configureSenderInternal(sender, endpoint, remoteEid, dvn);
-    }
-
-    /**
-     * @notice Configures the calling contract (address(this)) for cross-chain communication
-     * @dev Convenience function for self-configuration, commonly used in delegatecall contexts.
-     *      Caller must ensure msg.sender is authorized (use vm.startPrank in tests).
-     *      Equivalent to: configureSender(address(this), endpoint, remoteEid, dvn)
-     *
-     * @param endpoint The LayerZero endpoint address
-     * @param remoteEid The destination endpoint ID
-     * @param dvn The DVN to use for verification
-     */
-    function configureSenderSelf(
-        address endpoint,
-        uint32 remoteEid,
-        address dvn
-    ) internal {
-        _configureSenderInternal(address(this), endpoint, remoteEid, dvn);
-    }
-
-    /**
-     * @dev Internal implementation of sender configuration
-     * @param sender The address to configure
-     * @param endpoint The LayerZero endpoint address
-     * @param remoteEid The destination endpoint ID
-     * @param dvn The DVN to use for verification
-     */
-    function _configureSenderInternal(
-        address sender,
-        address endpoint,
-        uint32 remoteEid,
-        address dvn
-    ) private {
         address sendLib = ILayerZeroEndpointV2(endpoint).getSendLibrary(address(0), remoteEid);
 
         address[] memory dvns = new address[](1);
@@ -183,7 +147,7 @@ library LZForwarder {
             config     : abi.encode(ulnConfig)
         });
 
-        ILayerZeroEndpointV2(endpoint).setConfig(sender, sendLib, configParams);
+        ILayerZeroEndpointV2(endpoint).setConfig(address(this), sendLib, configParams);
     }
 
 }
