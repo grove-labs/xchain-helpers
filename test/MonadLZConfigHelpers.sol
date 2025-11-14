@@ -54,6 +54,7 @@ library MonadLZConfigHelpers {
 
         // Configure Ethereum → Monad direction
         ethereumFork.selectFork();
+
         vm.startPrank(sourceAuthority);
         LZForwarder.configureSender(
             sourceAuthority,
@@ -64,8 +65,7 @@ library MonadLZConfigHelpers {
         vm.stopPrank();
 
         vm.startPrank(testContract);
-        LZForwarder.configureSender(
-            testContract,
+        LZForwarder.configureSenderSelf(
             LZForwarder.ENDPOINT_ETHEREUM,
             LZForwarder.ENDPOINT_ID_MONAD,
             LZForwarder.DVN_ETHEREUM
@@ -74,6 +74,7 @@ library MonadLZConfigHelpers {
 
         // Configure Monad → Ethereum direction (reverse)
         monadFork.selectFork();
+
         vm.startPrank(destinationAuthority);
         LZForwarder.configureSender(
             destinationAuthority,
@@ -84,8 +85,7 @@ library MonadLZConfigHelpers {
         vm.stopPrank();
 
         vm.startPrank(testContract);
-        LZForwarder.configureSender(
-            testContract,
+        LZForwarder.configureSenderSelf(
             LZForwarder.ENDPOINT_MONAD,
             LZForwarder.ENDPOINT_ID_ETHEREUM,
             LZForwarder.DVN_MONAD
