@@ -106,10 +106,6 @@ abstract contract IntegrationBaseTest is Test {
     function runCrossChainTests(Domain memory _destination) internal {
         initBaseContracts(_destination);
 
-        executeTestingSequence();
-    }
-
-    function executeTestingSequence() internal {
         destination.selectFork();
 
         // Queue up some Destination -> Source messages

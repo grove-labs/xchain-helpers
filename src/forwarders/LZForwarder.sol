@@ -39,7 +39,7 @@ interface ILayerZeroEndpointV2 {
     ) external view returns (MessagingFee memory);
     function getSendLibrary(
         address sender,
-        uint32 dstEid
+        uint32  dstEid
     ) external view returns (address lib);
     function setConfig(
         address _oapp,
