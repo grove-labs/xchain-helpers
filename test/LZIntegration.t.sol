@@ -249,11 +249,11 @@ contract LZIntegrationTest is IntegrationBaseTest {
 
         // Calculate fee
         MessagingParams memory params = MessagingParams({
-            dstEid:       destinationEndpointId,
-            receiver:     bytes32(uint256(uint160(destinationReceiver))),
-            message:      message,
-            options:      options,
-            payInLzToken: false
+            dstEid       : destinationEndpointId,
+            receiver     : bytes32(uint256(uint160(destinationReceiver))),
+            message      : message,
+            options      : options,
+            payInLzToken : false
         });
         MessagingFee memory fee = ILayerZeroEndpointV2(bridge.sourceCrossChainMessenger).quote(params, sourceAuthority);
 
@@ -276,11 +276,11 @@ contract LZIntegrationTest is IntegrationBaseTest {
 
         // Calculate fee
         MessagingParams memory params = MessagingParams({
-            dstEid:       sourceEndpointId,
-            receiver:     bytes32(uint256(uint160(sourceReceiver))),
-            message:      message,
-            options:      options,
-            payInLzToken: false
+            dstEid       : sourceEndpointId,
+            receiver     : bytes32(uint256(uint160(sourceReceiver))),
+            message      : message,
+            options      : options,
+            payInLzToken : false
         });
         MessagingFee memory fee = ILayerZeroEndpointV2(bridge.destinationCrossChainMessenger).quote(params, destinationAuthority);
 
