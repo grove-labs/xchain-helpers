@@ -31,7 +31,7 @@ contract LZIntegrationTest is IntegrationBaseTest {
     address sourceEndpoint = LZForwarder.ENDPOINT_ETHEREUM;
     address destinationEndpoint;
 
-    address sourceDVN = LZForwarder.DVN_ETHEREUM;
+    address sourceDVN = LZForwarder.LZ_DVN_ETHEREUM;
     address destinationDVN;
 
     Domain destination2;
@@ -44,7 +44,7 @@ contract LZIntegrationTest is IntegrationBaseTest {
     function test_invalidEndpoint() public {
         destinationEndpointId = LZForwarder.ENDPOINT_ID_BASE;
         destinationEndpoint   = LZForwarder.ENDPOINT_BASE;
-        destinationDVN        = LZForwarder.DVN_BASE;
+        destinationDVN        = LZForwarder.LZ_DVN_BASE;
         initBaseContracts(getChain("base").createFork());
 
         destination.selectFork();
@@ -67,7 +67,7 @@ contract LZIntegrationTest is IntegrationBaseTest {
     function test_lzReceive_revertsNoPeer() public {
         destinationEndpointId = LZForwarder.ENDPOINT_ID_BASE;
         destinationEndpoint   = LZForwarder.ENDPOINT_BASE;
-        destinationDVN        = LZForwarder.DVN_BASE;
+        destinationDVN        = LZForwarder.LZ_DVN_BASE;
         initBaseContracts(getChain("base").createFork());
 
         destination.selectFork();
@@ -90,7 +90,7 @@ contract LZIntegrationTest is IntegrationBaseTest {
     function test_lzReceive_revertsOnlyPeer() public {
         destinationEndpointId = LZForwarder.ENDPOINT_ID_BASE;
         destinationEndpoint   = LZForwarder.ENDPOINT_BASE;
-        destinationDVN        = LZForwarder.DVN_BASE;
+        destinationDVN        = LZForwarder.LZ_DVN_BASE;
         initBaseContracts(getChain("base").createFork());
 
         destination.selectFork();
@@ -113,7 +113,7 @@ contract LZIntegrationTest is IntegrationBaseTest {
     function test_invalidSourceEid() public {
         destinationEndpointId = LZForwarder.ENDPOINT_ID_BASE;
         destinationEndpoint   = LZForwarder.ENDPOINT_BASE;
-        destinationDVN        = LZForwarder.DVN_BASE;
+        destinationDVN        = LZForwarder.LZ_DVN_BASE;
         initBaseContracts(getChain("base").createFork());
 
         destination.selectFork();
@@ -140,7 +140,7 @@ contract LZIntegrationTest is IntegrationBaseTest {
     function test_invalidSourceAuthority() public {
         destinationEndpointId = LZForwarder.ENDPOINT_ID_BASE;
         destinationEndpoint   = LZForwarder.ENDPOINT_BASE;
-        destinationDVN        = LZForwarder.DVN_BASE;
+        destinationDVN        = LZForwarder.LZ_DVN_BASE;
         initBaseContracts(getChain("base").createFork());
 
         destination.selectFork();
@@ -167,7 +167,7 @@ contract LZIntegrationTest is IntegrationBaseTest {
     function test_base() public {
         destinationEndpointId = LZForwarder.ENDPOINT_ID_BASE;
         destinationEndpoint   = LZForwarder.ENDPOINT_BASE;
-        destinationDVN        = LZForwarder.DVN_BASE;
+        destinationDVN        = LZForwarder.LZ_DVN_BASE;
 
         runCrossChainTests(getChain("base").createFork());
     }
@@ -175,7 +175,7 @@ contract LZIntegrationTest is IntegrationBaseTest {
     function test_binance() public {
         destinationEndpointId = LZForwarder.ENDPOINT_ID_BNB;
         destinationEndpoint   = LZForwarder.ENDPOINT_BNB;
-        destinationDVN        = LZForwarder.DVN_BNB;
+        destinationDVN        = LZForwarder.LZ_DVN_BNB;
 
         runCrossChainTests(getChain("bnb_smart_chain").createFork());
     }
@@ -183,7 +183,7 @@ contract LZIntegrationTest is IntegrationBaseTest {
     function test_monad_t() public {
         destinationEndpointId = LZForwarder.ENDPOINT_ID_MONAD;
         destinationEndpoint   = LZForwarder.ENDPOINT_MONAD;
-        destinationDVN        = LZForwarder.DVN_MONAD;
+        destinationDVN        = LZForwarder.LZ_DVN_MONAD;
 
         runCrossChainTests(getChain("monad").createFork());
     }
@@ -191,7 +191,7 @@ contract LZIntegrationTest is IntegrationBaseTest {
     function test_plasma() public {
         destinationEndpointId = LZForwarder.ENDPOINT_ID_PLASMA;
         destinationEndpoint   = LZForwarder.ENDPOINT_PLASMA;
-        destinationDVN        = LZForwarder.DVN_PLASMA;
+        destinationDVN        = LZForwarder.LZ_DVN_PLASMA;
 
         runCrossChainTests(getChain("plasma").createFork());
     }

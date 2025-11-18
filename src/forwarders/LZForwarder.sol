@@ -73,12 +73,12 @@ library LZForwarder {
     address public constant RECEIVE_LIBRARY_MONAD     = 0xe1844c5D63a9543023008D332Bd3d2e6f1FE1043;
     address public constant RECEIVE_LIBRARY_PLASMA    = 0xe1844c5D63a9543023008D332Bd3d2e6f1FE1043;
 
-    address public constant DVN_ETHEREUM  = 0x589dEDbD617e0CBcB916A9223F4d1300c294236b; // LayerZero Labs
-    address public constant DVN_AVALANCHE = 0x0Ffe02DF012299A370D5dd69298A5826EAcaFdF8; // LayerZero Labs
-    address public constant DVN_BASE      = 0xB1473AC9f58FB27597a21710da9D1071841E8163; // LayerZero Labs
-    address public constant DVN_BNB       = 0x509889389cfB7A89850017425810116A44676F58; // LayerZero Labs
-    address public constant DVN_MONAD     = 0x282b3386571f7f794450d5789911a9804FA346b4; // LayerZero Labs
-    address public constant DVN_PLASMA    = 0xE5BFfd46776251b70895517D4AB635a640dA61E9; // LayerZero Labs
+    address public constant LZ_DVN_ETHEREUM  = 0x589dEDbD617e0CBcB916A9223F4d1300c294236b; // LayerZero Labs
+    address public constant LZ_DVN_AVALANCHE = 0x0Ffe02DF012299A370D5dd69298A5826EAcaFdF8; // LayerZero Labs
+    address public constant LZ_DVN_BASE      = 0xB1473AC9f58FB27597a21710da9D1071841E8163; // LayerZero Labs
+    address public constant LZ_DVN_BNB       = 0x509889389cfB7A89850017425810116A44676F58; // LayerZero Labs
+    address public constant LZ_DVN_MONAD     = 0x282b3386571f7f794450d5789911a9804FA346b4; // LayerZero Labs
+    address public constant LZ_DVN_PLASMA    = 0xE5BFfd46776251b70895517D4AB635a640dA61E9; // LayerZero Labs
 
     function sendMessage(
         uint32               _dstEid,
