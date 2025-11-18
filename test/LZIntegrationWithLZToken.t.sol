@@ -5,12 +5,18 @@ import { IERC20 } from "forge-std/interfaces/IERC20.sol";
 
 import { OptionsBuilder } from "layerzerolabs/oapp-evm/contracts/oapp/libs/OptionsBuilder.sol";
 
-import { LZBridgeTesting }                             from "src/testing/bridges/LZBridgeTesting.sol";
-import { LZForwarder, ILayerZeroEndpointV2,
-         MessagingParams, MessagingFee }               from "src/forwarders/LZForwarder.sol";
-import { LZReceiver, Origin }                          from "src/receivers/LZReceiver.sol";
-import { MessageSender }                               from "test/mocks/MessageSender.sol";
-import { RecordedLogs }                                from "src/testing/utils/RecordedLogs.sol";
+import { LZBridgeTesting }    from "src/testing/bridges/LZBridgeTesting.sol";
+import { LZReceiver, Origin } from "src/receivers/LZReceiver.sol";
+import { RecordedLogs }       from "src/testing/utils/RecordedLogs.sol";
+
+import {
+    ILayerZeroEndpointV2,
+    LZForwarder,
+    MessagingFee,
+    MessagingParams
+} from "src/forwarders/LZForwarder.sol";
+
+import { MessageSender } from "test/mocks/MessageSender.sol";
 
 import "./IntegrationBase.t.sol";
 
@@ -146,11 +152,11 @@ contract LZIntegrationTestWithLZToken is IntegrationBaseTest {
 
         // Calculate fee
         MessagingParams memory params = MessagingParams({
-            dstEid:       destinationEndpointId,
-            receiver:     bytes32(uint256(uint160(destinationReceiver))),
-            message:      message,
-            options:      options,
-            payInLzToken: true
+            dstEid       : destinationEndpointId,
+            receiver     : bytes32(uint256(uint160(destinationReceiver))),
+            message      : message,
+            options      : options,
+            payInLzToken : true
         });
         MessagingFee memory fee = ILayerZeroEndpointV2(bridge.sourceCrossChainMessenger).quote(params, sourceAuthority);
 
@@ -179,11 +185,11 @@ contract LZIntegrationTestWithLZToken is IntegrationBaseTest {
 
         // Calculate fee
         MessagingParams memory params = MessagingParams({
-            dstEid:       sourceEndpointId,
-            receiver:     bytes32(uint256(uint160(sourceReceiver))),
-            message:      message,
-            options:      options,
-            payInLzToken: false
+            dstEid       : sourceEndpointId,
+            receiver     : bytes32(uint256(uint160(sourceReceiver))),
+            message      : message,
+            options      : options,
+            payInLzToken : false
         });
         MessagingFee memory fee = ILayerZeroEndpointV2(bridge.destinationCrossChainMessenger).quote(params, destinationAuthority);
 

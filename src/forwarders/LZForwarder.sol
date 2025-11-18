@@ -90,11 +90,11 @@ library LZForwarder {
         bool                 _payInLzToken
     ) internal {
         MessagingParams memory params = MessagingParams({
-            dstEid:       _dstEid,
-            receiver:     _receiver,
-            message:      _message,
-            options:      _options,
-            payInLzToken: _payInLzToken
+            dstEid       : _dstEid,
+            receiver     : _receiver,
+            message      : _message,
+            options      : _options,
+            payInLzToken : _payInLzToken
         });
 
         MessagingFee memory fee = endpoint.quote(params, address(this));

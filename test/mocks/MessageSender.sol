@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 pragma solidity ^0.8.0;
 
-import { LZForwarder, ILayerZeroEndpointV2 } from "src/forwarders/LZForwarder.sol";
+import { ILayerZeroEndpointV2, LZForwarder } from "src/forwarders/LZForwarder.sol";
 
 /**
  * @title MessageSender
@@ -18,7 +18,7 @@ contract MessageSender {
      */
     function configureSender(
         address endpoint,
-        uint32 remoteEid,
+        uint32  remoteEid,
         address dvn
     ) external {
         address[] memory dvns = new address[](1);
@@ -38,13 +38,13 @@ contract MessageSender {
      * @param _payInLzToken Whether to pay in LZ token
      */
     function sendMessage(
-        uint32 _dstEid,
+        uint32  _dstEid,
         bytes32 _receiver,
         address endpoint,
-        bytes memory _message,
-        bytes memory _options,
+        bytes   memory _message,
+        bytes   memory _options,
         address _refundAddress,
-        bool _payInLzToken
+        bool    _payInLzToken
     ) external payable {
         // Use LZForwarder library - it will execute in this contract's context
         // The library will call endpoint.send{value:...} which will use this contract's balance
