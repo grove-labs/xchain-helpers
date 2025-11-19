@@ -59,6 +59,46 @@ contract LZIntegrationTestWithLZToken is IntegrationBaseTest {
         vm.stopPrank();
     }
 
+    function test_invalidDVN() public {
+        destinationEndpointId = LZForwarder.ENDPOINT_ID_BASE;
+        destinationEndpoint   = LZForwarder.ENDPOINT_BASE;
+        destinationDVN        = LZForwarder.LZ_DVN_BASE;
+        sourceDVN             = 0x747C741496a507E4B404b50463e691A8d692f6Ac; // Ethereum Mainnet Dead DVN
+        initBaseContracts(getChain("base").createFork());
+
+        source.selectFork();
+
+        bytes memory options = OptionsBuilder.newOptions().addExecutorLzReceiveOption(200_000, 0);
+        bytes memory message = abi.encodeCall(MessageOrdering.push, (1));
+
+        MessagingParams memory params = MessagingParams({
+            dstEid       : destinationEndpointId,
+            receiver     : bytes32(uint256(uint160(destinationReceiver))),
+            message      : message,
+            options      : options,
+            payInLzToken : true
+        });
+
+        // Not able to quote fee with misconfigured DVN
+        vm.expectRevert("Please set your OApp's DVNs and/or Executor");
+        ILayerZeroEndpointV2(bridge.sourceCrossChainMessenger).quote(params, sourceAuthority);
+
+        uint256 forecastedNativeFee = 20_256_857_875_471;
+
+        // Not able to send message with misconfigured DVN
+        vm.prank(sourceAuthority);
+        vm.expectRevert("Please set your OApp's DVNs and/or Executor");
+        MessageSender(payable(sourceAuthority)).sendMessage{value: forecastedNativeFee}(
+            destinationEndpointId,
+            bytes32(uint256(uint160(destinationReceiver))),
+            bridge.sourceCrossChainMessenger,
+            message,
+            options,
+            sourceAuthority,
+            true
+        );
+    }
+
     function test_base() public {
         destinationEndpointId = LZForwarder.ENDPOINT_ID_BASE;
         destinationEndpoint   = LZForwarder.ENDPOINT_BASE;
