@@ -19,9 +19,10 @@ contract MessageSender {
     function configureSender(
         address endpoint,
         uint32  remoteEid,
-        address[] memory dvns
+        address[] memory dvns,
+        address executor
     ) external {
-        LZForwarder.configureSender(endpoint, remoteEid, dvns);
+        LZForwarder.configureSender(endpoint, remoteEid, dvns, executor);
     }
 
     /**

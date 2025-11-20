@@ -6,6 +6,7 @@ import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.s
 
 import { SetConfigParam } from "@layerzerolabs/lz-evm-protocol-v2/contracts/interfaces/IMessageLibManager.sol";
 import { UlnConfig }      from "@layerzerolabs/lz-evm-messagelib-v2/contracts/uln/UlnBase.sol";
+import { ExecutorConfig } from "@layerzerolabs/lz-evm-messagelib-v2/contracts/SendLibBase.sol";
 
 struct MessagingParams {
     uint32  dstEid;
@@ -73,6 +74,13 @@ library LZForwarder {
     address public constant RECEIVE_LIBRARY_MONAD     = 0xe1844c5D63a9543023008D332Bd3d2e6f1FE1043;
     address public constant RECEIVE_LIBRARY_PLASMA    = 0xe1844c5D63a9543023008D332Bd3d2e6f1FE1043;
 
+    address public constant EXECUTOR_ETHEREUM  = 0x173272739Bd7Aa6e4e214714048a9fE699453059;
+    address public constant EXECUTOR_AVALANCHE = 0x90E595783E43eb89fF07f63d27B8430e6B44bD9c;
+    address public constant EXECUTOR_BASE      = 0x2CCA08ae69E0C44b18a57Ab2A87644234dAebaE4;
+    address public constant EXECUTOR_BNB       = 0x3ebD570ed38B1b3b4BC886999fcF507e9D584859;
+    address public constant EXECUTOR_MONAD     = 0x4208D6E27538189bB48E603D6123A94b8Abe0A0b;
+    address public constant EXECUTOR_PLASMA    = 0x4208D6E27538189bB48E603D6123A94b8Abe0A0b;
+
     // When passed to the config, the DVN addresses should be sorted in ascending order
     address public constant LAYER_ZERO_DVN_ETHEREUM  = 0x589dEDbD617e0CBcB916A9223F4d1300c294236b;
     address public constant NETHERMIND_DVN_ETHEREUM  = 0xa59BA433ac34D2927232918Ef5B2eaAfcF130BA5;
@@ -132,7 +140,8 @@ library LZForwarder {
     function configureSender(
         address endpoint,
         uint32 remoteEid,
-        address[] memory dvns
+        address[] memory dvns,
+        address executor
     ) internal {
         address sendLib = ILayerZeroEndpointV2(endpoint).getSendLibrary(address(0), remoteEid);
 
@@ -145,14 +154,28 @@ library LZForwarder {
             optionalDVNs         : new address[](0)
         });
 
-        SetConfigParam[] memory configParams = new SetConfigParam[](1);
-        configParams[0] = SetConfigParam({
+        SetConfigParam[] memory ulnConfigParams = new SetConfigParam[](1);
+        ulnConfigParams[0] = SetConfigParam({
             eid        : remoteEid,
             configType : 2,
             config     : abi.encode(ulnConfig)
         });
 
-        ILayerZeroEndpointV2(endpoint).setConfig(address(this), sendLib, configParams);
+        ILayerZeroEndpointV2(endpoint).setConfig(address(this), sendLib, ulnConfigParams);
+
+        ExecutorConfig memory executorConfig = ExecutorConfig({
+            maxMessageSize : 10_000,
+            executor       : executor
+        });
+
+        SetConfigParam[] memory executorConfigParams = new SetConfigParam[](1);
+        executorConfigParams[0] = SetConfigParam({
+            eid        : remoteEid,
+            configType : 1,
+            config     : abi.encode(executorConfig)
+        });
+
+        ILayerZeroEndpointV2(endpoint).setConfig(address(this), sendLib, executorConfigParams);
     }
 
 }

@@ -37,6 +37,9 @@ contract LZIntegrationTestWithLZToken is IntegrationBaseTest {
     address sourceEndpoint = LZForwarder.ENDPOINT_ETHEREUM;
     address destinationEndpoint;
 
+    address sourceExecutor = LZForwarder.EXECUTOR_ETHEREUM;
+    address destinationExecutor;
+
     address[] sourceDVNs = [LZForwarder.LAYER_ZERO_DVN_ETHEREUM, LZForwarder.NETHERMIND_DVN_ETHEREUM];
     address[] destinationDVNs = new address[](2);
 
@@ -62,6 +65,7 @@ contract LZIntegrationTestWithLZToken is IntegrationBaseTest {
     function test_invalidDVN() public {
         destinationEndpointId = LZForwarder.ENDPOINT_ID_BASE;
         destinationEndpoint   = LZForwarder.ENDPOINT_BASE;
+        destinationExecutor   = LZForwarder.EXECUTOR_BASE;
         destinationDVNs[0]    = LZForwarder.LAYER_ZERO_DVN_BASE;
         destinationDVNs[1]    = LZForwarder.NETHERMIND_DVN_BASE;
         sourceDVNs            = new address[](1);
@@ -104,6 +108,7 @@ contract LZIntegrationTestWithLZToken is IntegrationBaseTest {
     function test_base() public {
         destinationEndpointId = LZForwarder.ENDPOINT_ID_BASE;
         destinationEndpoint   = LZForwarder.ENDPOINT_BASE;
+        destinationExecutor   = LZForwarder.EXECUTOR_BASE;
         destinationDVNs[0]    = LZForwarder.LAYER_ZERO_DVN_BASE;
         destinationDVNs[1]    = LZForwarder.NETHERMIND_DVN_BASE;
 
@@ -113,6 +118,7 @@ contract LZIntegrationTestWithLZToken is IntegrationBaseTest {
     function test_binance() public {
         destinationEndpointId = LZForwarder.ENDPOINT_ID_BNB;
         destinationEndpoint   = LZForwarder.ENDPOINT_BNB;
+        destinationExecutor   = LZForwarder.EXECUTOR_BNB;
         destinationDVNs[0]    = LZForwarder.NETHERMIND_DVN_BNB;
         destinationDVNs[1]    = LZForwarder.LAYER_ZERO_DVN_BNB;
 
@@ -122,6 +128,7 @@ contract LZIntegrationTestWithLZToken is IntegrationBaseTest {
     function test_monad() public {
         destinationEndpointId = LZForwarder.ENDPOINT_ID_MONAD;
         destinationEndpoint   = LZForwarder.ENDPOINT_MONAD;
+        destinationExecutor   = LZForwarder.EXECUTOR_MONAD;
         destinationDVNs[0]    = LZForwarder.LAYER_ZERO_DVN_MONAD;
         destinationDVNs[1]    = LZForwarder.NETHERMIND_DVN_MONAD;
 
@@ -131,6 +138,7 @@ contract LZIntegrationTestWithLZToken is IntegrationBaseTest {
     function test_plasma() public {
         destinationEndpointId = LZForwarder.ENDPOINT_ID_PLASMA;
         destinationEndpoint   = LZForwarder.ENDPOINT_PLASMA;
+        destinationExecutor   = LZForwarder.EXECUTOR_PLASMA;
         destinationDVNs[0]    = LZForwarder.LAYER_ZERO_DVN_PLASMA;
         destinationDVNs[1]    = LZForwarder.NETHERMIND_DVN_PLASMA;
 
@@ -146,7 +154,8 @@ contract LZIntegrationTestWithLZToken is IntegrationBaseTest {
         MessageSender(payable(sourceAuthority)).configureSender(
             sourceEndpoint,
             destinationEndpointId,
-            sourceDVNs
+            sourceDVNs,
+            sourceExecutor
         );
 
         return address(new LZReceiver(
@@ -168,7 +177,8 @@ contract LZIntegrationTestWithLZToken is IntegrationBaseTest {
         MessageSender(payable(destinationAuthority)).configureSender(
             destinationEndpoint,
             sourceEndpointId,
-            destinationDVNs
+            destinationDVNs,
+            destinationExecutor
         );
 
         return address(new LZReceiver(
