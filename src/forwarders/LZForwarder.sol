@@ -73,12 +73,20 @@ library LZForwarder {
     address public constant RECEIVE_LIBRARY_MONAD     = 0xe1844c5D63a9543023008D332Bd3d2e6f1FE1043;
     address public constant RECEIVE_LIBRARY_PLASMA    = 0xe1844c5D63a9543023008D332Bd3d2e6f1FE1043;
 
-    address public constant LZ_DVN_ETHEREUM  = 0x589dEDbD617e0CBcB916A9223F4d1300c294236b; // LayerZero Labs
-    address public constant LZ_DVN_AVALANCHE = 0x0Ffe02DF012299A370D5dd69298A5826EAcaFdF8; // LayerZero Labs
-    address public constant LZ_DVN_BASE      = 0xB1473AC9f58FB27597a21710da9D1071841E8163; // LayerZero Labs
-    address public constant LZ_DVN_BNB       = 0x509889389cfB7A89850017425810116A44676F58; // LayerZero Labs
-    address public constant LZ_DVN_MONAD     = 0x282b3386571f7f794450d5789911a9804FA346b4; // LayerZero Labs
-    address public constant LZ_DVN_PLASMA    = 0xE5BFfd46776251b70895517D4AB635a640dA61E9; // LayerZero Labs
+    // When passed to the config, the DVN addresses should be sorted in ascending order
+    address public constant LAYER_ZERO_DVN_ETHEREUM  = 0x589dEDbD617e0CBcB916A9223F4d1300c294236b;
+    address public constant NETHERMIND_DVN_ETHEREUM  = 0xa59BA433ac34D2927232918Ef5B2eaAfcF130BA5;
+    address public constant LAYER_ZERO_DVN_AVALANCHE = 0x962F502A63F5FBeB44DC9ab932122648E8352959;
+    address public constant NETHERMIND_DVN_AVALANCHE = 0xa59BA433ac34D2927232918Ef5B2eaAfcF130BA5;
+    address public constant LAYER_ZERO_DVN_BASE      = 0x9e059a54699a285714207b43B055483E78FAac25;
+    address public constant NETHERMIND_DVN_BASE      = 0xcd37CA043f8479064e10635020c65FfC005d36f6;
+    address public constant LAYER_ZERO_DVN_BNB       = 0xfD6865c841c2d64565562fCc7e05e619A30615f0;
+    address public constant NETHERMIND_DVN_BNB       = 0x31F748a368a893Bdb5aBB67ec95F232507601A73;
+    address public constant LAYER_ZERO_DVN_MONAD     = 0x282b3386571f7f794450d5789911a9804FA346b4;
+    address public constant NETHERMIND_DVN_MONAD     = 0xaCDe1f22EEAb249d3ca6Ba8805C8fEe9f52a16e7;
+    address public constant LAYER_ZERO_DVN_PLASMA    = 0x282b3386571f7f794450d5789911a9804FA346b4;
+    address public constant NETHERMIND_DVN_PLASMA    = 0xa51cE237FaFA3052D5d3308Df38A024724Bb1274;
+
 
     function sendMessage(
         uint32               _dstEid,

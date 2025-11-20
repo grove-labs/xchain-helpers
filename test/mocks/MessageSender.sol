@@ -14,16 +14,13 @@ contract MessageSender {
      * @notice Configure this contract as a sender for cross-chain communication
      * @param endpoint The LayerZero endpoint address
      * @param remoteEid The destination endpoint ID
-     * @param dvn The DVN to use for verification
+     * @param dvns The DVNs to use for verification
      */
     function configureSender(
         address endpoint,
         uint32  remoteEid,
-        address dvn
+        address[] memory dvns
     ) external {
-        address[] memory dvns = new address[](1);
-        dvns[0] = dvn;
-
         LZForwarder.configureSender(endpoint, remoteEid, dvns);
     }
 

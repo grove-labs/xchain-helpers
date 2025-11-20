@@ -31,8 +31,8 @@ contract LZIntegrationTest is IntegrationBaseTest {
     address sourceEndpoint = LZForwarder.ENDPOINT_ETHEREUM;
     address destinationEndpoint;
 
-    address sourceDVN = LZForwarder.LZ_DVN_ETHEREUM;
-    address destinationDVN;
+    address[] sourceDVNs = [LZForwarder.LAYER_ZERO_DVN_ETHEREUM, LZForwarder.NETHERMIND_DVN_ETHEREUM];
+    address[] destinationDVNs = new address[](2);
 
     Domain destination2;
     Bridge bridge2;
@@ -44,7 +44,8 @@ contract LZIntegrationTest is IntegrationBaseTest {
     function test_invalidEndpoint() public {
         destinationEndpointId = LZForwarder.ENDPOINT_ID_BASE;
         destinationEndpoint   = LZForwarder.ENDPOINT_BASE;
-        destinationDVN        = LZForwarder.LZ_DVN_BASE;
+        destinationDVNs[0]    = LZForwarder.LAYER_ZERO_DVN_BASE;
+        destinationDVNs[1]    = LZForwarder.NETHERMIND_DVN_BASE;
         initBaseContracts(getChain("base").createFork());
 
         destination.selectFork();
@@ -67,7 +68,8 @@ contract LZIntegrationTest is IntegrationBaseTest {
     function test_lzReceive_revertsNoPeer() public {
         destinationEndpointId = LZForwarder.ENDPOINT_ID_BASE;
         destinationEndpoint   = LZForwarder.ENDPOINT_BASE;
-        destinationDVN        = LZForwarder.LZ_DVN_BASE;
+        destinationDVNs[0]    = LZForwarder.LAYER_ZERO_DVN_BASE;
+        destinationDVNs[1]    = LZForwarder.NETHERMIND_DVN_BASE;
         initBaseContracts(getChain("base").createFork());
 
         destination.selectFork();
@@ -90,7 +92,8 @@ contract LZIntegrationTest is IntegrationBaseTest {
     function test_lzReceive_revertsOnlyPeer() public {
         destinationEndpointId = LZForwarder.ENDPOINT_ID_BASE;
         destinationEndpoint   = LZForwarder.ENDPOINT_BASE;
-        destinationDVN        = LZForwarder.LZ_DVN_BASE;
+        destinationDVNs[0]    = LZForwarder.LAYER_ZERO_DVN_BASE;
+        destinationDVNs[1]    = LZForwarder.NETHERMIND_DVN_BASE;
         initBaseContracts(getChain("base").createFork());
 
         destination.selectFork();
@@ -113,7 +116,8 @@ contract LZIntegrationTest is IntegrationBaseTest {
     function test_invalidSourceEid() public {
         destinationEndpointId = LZForwarder.ENDPOINT_ID_BASE;
         destinationEndpoint   = LZForwarder.ENDPOINT_BASE;
-        destinationDVN        = LZForwarder.LZ_DVN_BASE;
+        destinationDVNs[0]    = LZForwarder.LAYER_ZERO_DVN_BASE;
+        destinationDVNs[1]    = LZForwarder.NETHERMIND_DVN_BASE;
         initBaseContracts(getChain("base").createFork());
 
         destination.selectFork();
@@ -140,7 +144,8 @@ contract LZIntegrationTest is IntegrationBaseTest {
     function test_invalidSourceAuthority() public {
         destinationEndpointId = LZForwarder.ENDPOINT_ID_BASE;
         destinationEndpoint   = LZForwarder.ENDPOINT_BASE;
-        destinationDVN        = LZForwarder.LZ_DVN_BASE;
+        destinationDVNs[0]    = LZForwarder.LAYER_ZERO_DVN_BASE;
+        destinationDVNs[1]    = LZForwarder.NETHERMIND_DVN_BASE;
         initBaseContracts(getChain("base").createFork());
 
         destination.selectFork();
@@ -167,8 +172,10 @@ contract LZIntegrationTest is IntegrationBaseTest {
     function test_invalidDVN() public {
         destinationEndpointId = LZForwarder.ENDPOINT_ID_BASE;
         destinationEndpoint   = LZForwarder.ENDPOINT_BASE;
-        destinationDVN        = LZForwarder.LZ_DVN_BASE;
-        sourceDVN             = 0x747C741496a507E4B404b50463e691A8d692f6Ac; // Ethereum Mainnet Dead DVN
+        destinationDVNs[0]    = LZForwarder.LAYER_ZERO_DVN_BASE;
+        destinationDVNs[1]    = LZForwarder.NETHERMIND_DVN_BASE;
+        sourceDVNs            = new address[](1);
+        sourceDVNs[0]         = 0x747C741496a507E4B404b50463e691A8d692f6Ac; // Ethereum Mainnet Dead DVN
         initBaseContracts(getChain("base").createFork());
 
         source.selectFork();
@@ -207,7 +214,8 @@ contract LZIntegrationTest is IntegrationBaseTest {
     function test_base() public {
         destinationEndpointId = LZForwarder.ENDPOINT_ID_BASE;
         destinationEndpoint   = LZForwarder.ENDPOINT_BASE;
-        destinationDVN        = LZForwarder.LZ_DVN_BASE;
+        destinationDVNs[0]    = LZForwarder.LAYER_ZERO_DVN_BASE;
+        destinationDVNs[1]    = LZForwarder.NETHERMIND_DVN_BASE;
 
         runCrossChainTests(getChain("base").createFork());
     }
@@ -215,15 +223,17 @@ contract LZIntegrationTest is IntegrationBaseTest {
     function test_binance() public {
         destinationEndpointId = LZForwarder.ENDPOINT_ID_BNB;
         destinationEndpoint   = LZForwarder.ENDPOINT_BNB;
-        destinationDVN        = LZForwarder.LZ_DVN_BNB;
+        destinationDVNs[0]    = LZForwarder.NETHERMIND_DVN_BNB;
+        destinationDVNs[1]    = LZForwarder.LAYER_ZERO_DVN_BNB;
 
         runCrossChainTests(getChain("bnb_smart_chain").createFork());
     }
 
-    function test_monad_t() public {
+    function test_monad() public {
         destinationEndpointId = LZForwarder.ENDPOINT_ID_MONAD;
         destinationEndpoint   = LZForwarder.ENDPOINT_MONAD;
-        destinationDVN        = LZForwarder.LZ_DVN_MONAD;
+        destinationDVNs[0]    = LZForwarder.LAYER_ZERO_DVN_MONAD;
+        destinationDVNs[1]    = LZForwarder.NETHERMIND_DVN_MONAD;
 
         runCrossChainTests(getChain("monad").createFork());
     }
@@ -231,12 +241,14 @@ contract LZIntegrationTest is IntegrationBaseTest {
     function test_plasma() public {
         destinationEndpointId = LZForwarder.ENDPOINT_ID_PLASMA;
         destinationEndpoint   = LZForwarder.ENDPOINT_PLASMA;
-        destinationDVN        = LZForwarder.LZ_DVN_PLASMA;
+        destinationDVNs[0]    = LZForwarder.LAYER_ZERO_DVN_PLASMA;
+        destinationDVNs[1]    = LZForwarder.NETHERMIND_DVN_PLASMA;
 
         runCrossChainTests(getChain("plasma").createFork());
     }
 
     function initSourceReceiver() internal override returns (address) {
+        // Etch MessageSender at sourceAuthority
         MessageSender senderImpl = new MessageSender();
         vm.etch(sourceAuthority, address(senderImpl).code);
         vm.deal(sourceAuthority, 1000 ether);
@@ -244,7 +256,7 @@ contract LZIntegrationTest is IntegrationBaseTest {
         MessageSender(payable(sourceAuthority)).configureSender(
             sourceEndpoint,
             destinationEndpointId,
-            sourceDVN
+            sourceDVNs
         );
 
         return address(new LZReceiver(
@@ -253,7 +265,8 @@ contract LZIntegrationTest is IntegrationBaseTest {
             bytes32(uint256(uint160(destinationAuthority))),
             address(moSource),
             makeAddr("delegate"),
-            makeAddr("owner")
+            makeAddr("owner"),
+            sourceDVNs
         ));
     }
 
@@ -265,7 +278,7 @@ contract LZIntegrationTest is IntegrationBaseTest {
         MessageSender(payable(destinationAuthority)).configureSender(
             destinationEndpoint,
             sourceEndpointId,
-            destinationDVN
+            destinationDVNs
         );
 
         return address(new LZReceiver(
@@ -274,7 +287,8 @@ contract LZIntegrationTest is IntegrationBaseTest {
             bytes32(uint256(uint160(sourceAuthority))),
             address(moDestination),
             makeAddr("delegate"),
-            makeAddr("owner")
+            makeAddr("owner"),
+            sourceDVNs
         ));
     }
 
