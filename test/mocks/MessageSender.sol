@@ -17,10 +17,10 @@ contract MessageSender {
      * @param dvns The DVNs to use for verification
      */
     function configureSender(
-        address endpoint,
-        uint32  remoteEid,
+        address   endpoint,
+        uint32    remoteEid,
         address[] memory dvns,
-        address executor
+        address   executor
     ) external {
         LZForwarder.configureSender(endpoint, remoteEid, dvns, executor);
     }
