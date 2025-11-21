@@ -5,6 +5,8 @@ import "./IntegrationBase.t.sol";
 
 import { OptionsBuilder } from "layerzerolabs/oapp-evm/contracts/oapp/libs/OptionsBuilder.sol";
 
+import { UlnConfig } from "@layerzerolabs/lz-evm-messagelib-v2/contracts/uln/UlnBase.sol";
+
 import {
     LZForwarder,
     ILayerZeroEndpointV2,
@@ -218,6 +220,81 @@ contract LZIntegrationTest is IntegrationBaseTest {
             sourceAuthority,
             false
         );
+    }
+
+    function test_initBaseContracts_forwarderIsUsedToCorrectlyConfigureSender_source() public {
+        destinationEndpointId = LZForwarder.ENDPOINT_ID_BASE;
+        destinationEndpoint   = LZForwarder.ENDPOINT_BASE;
+        destinationExecutor   = LZForwarder.EXECUTOR_BASE;
+        destinationDVNs[0]    = LZForwarder.LAYER_ZERO_DVN_BASE;
+        destinationDVNs[1]    = LZForwarder.NETHERMIND_DVN_BASE;
+
+        initBaseContracts(getChain("base").createFork());
+
+        source.selectFork();
+
+        // ULN configType = 2, Executor configType = 1
+        address sendLib = ILayerZeroEndpointV2(sourceEndpoint).getSendLibrary(sourceAuthority, destinationEndpointId);
+
+        // ULN Config
+        bytes memory ulnConfigBytes = ILayerZeroEndpointV2(sourceEndpoint).getConfig(
+            sourceAuthority, sendLib, destinationEndpointId, 2
+        );
+        UlnConfig memory ulnConfig = abi.decode(ulnConfigBytes, (UlnConfig));
+        assertEq(ulnConfig.confirmations,        15,            "uln confirmations should be 15");
+        assertEq(ulnConfig.requiredDVNCount,     2,             "uln requiredDVNCount should be 2");
+        assertEq(ulnConfig.optionalDVNCount,     0,             "uln optionalDVNCount should be 0");
+        assertEq(ulnConfig.optionalDVNThreshold, 0,             "uln optionalDVNThreshold should be 0");
+        assertEq(ulnConfig.requiredDVNs.length,  2,             "uln requiredDVNs length should be 2");
+        assertEq(ulnConfig.requiredDVNs[0],      sourceDVNs[0], "uln requiredDVNs[0]");
+        assertEq(ulnConfig.requiredDVNs[1],      sourceDVNs[1], "uln requiredDVNs[1]");
+        assertEq(ulnConfig.optionalDVNs.length,  0,             "uln optionalDVNs length should be 0");
+
+        // Executor Config
+        bytes memory execConfigBytes = ILayerZeroEndpointV2(sourceEndpoint).getConfig(
+            sourceAuthority, sendLib, destinationEndpointId, 1
+        );
+        // struct ExecutorConfig { uint64 maxMessageSize; address executor; }
+        (uint64 maxMessageSize, address executorAddress) = abi.decode(execConfigBytes, (uint64, address));
+        assertEq(maxMessageSize,  10_000,         "executor maxMessageSize");
+        assertEq(executorAddress, sourceExecutor, "executor address matches config");
+    }
+
+    function test_initBaseContracts_forwarderIsUsedToCorrectlyConfigureSender_destination() public {
+        destinationEndpointId = LZForwarder.ENDPOINT_ID_BASE;
+        destinationEndpoint   = LZForwarder.ENDPOINT_BASE;
+        destinationExecutor   = LZForwarder.EXECUTOR_BASE;
+        destinationDVNs[0]    = LZForwarder.LAYER_ZERO_DVN_BASE;
+        destinationDVNs[1]    = LZForwarder.NETHERMIND_DVN_BASE;
+
+        initBaseContracts(getChain("base").createFork());
+
+        destination.selectFork();
+
+        // ULN configType = 2, Executor configType = 1
+        address sendLib = ILayerZeroEndpointV2(destinationEndpoint).getSendLibrary(destinationAuthority, sourceEndpointId);
+
+        // ULN Config
+        bytes memory ulnConfigBytes = ILayerZeroEndpointV2(destinationEndpoint).getConfig(
+            destinationAuthority, sendLib, sourceEndpointId, 2
+        );
+        UlnConfig memory ulnConfig = abi.decode(ulnConfigBytes, (UlnConfig));
+        assertEq(ulnConfig.confirmations,        15,                 "uln confirmations should be 15");
+        assertEq(ulnConfig.requiredDVNCount,     2,                  "uln requiredDVNCount should be 2");
+        assertEq(ulnConfig.optionalDVNCount,     0,                  "uln optionalDVNCount should be 0");
+        assertEq(ulnConfig.optionalDVNThreshold, 0,                  "uln optionalDVNThreshold should be 0");
+        assertEq(ulnConfig.requiredDVNs.length,  2,                  "uln requiredDVNs length should be 2");
+        assertEq(ulnConfig.requiredDVNs[0],      destinationDVNs[0], "uln requiredDVNs[0]");
+        assertEq(ulnConfig.requiredDVNs[1],      destinationDVNs[1], "uln requiredDVNs[1]");
+        assertEq(ulnConfig.optionalDVNs.length,  0,                  "uln optionalDVNs length should be 0");
+
+        // Executor Config
+        bytes memory execConfigBytes = ILayerZeroEndpointV2(destinationEndpoint).getConfig(
+            destinationAuthority, sendLib, sourceEndpointId, 1
+        );
+        (uint64 maxMessageSize, address executorAddress) = abi.decode(execConfigBytes, (uint64, address));
+        assertEq(maxMessageSize,  10_000,              "executor maxMessageSize");
+        assertEq(executorAddress, destinationExecutor, "executor address matches config");
     }
 
     function test_base() public {

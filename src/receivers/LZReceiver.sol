@@ -9,11 +9,6 @@ import { UlnConfig }      from "@layerzerolabs/lz-evm-messagelib-v2/contracts/ul
 
 import { OAppReceiver, Origin, OAppCore } from "layerzerolabs/oapp-evm/contracts/oapp/OApp.sol";
 
-interface ILayerZeroEndpointV2 {
-    function getReceiveLibrary(address _receiver, uint32 _srcEid) external view returns (address lib);
-    function setConfig(address _oapp, address _lib, SetConfigParam[] calldata _params) external;
-}
-
 /**
  * @title  LZReceiver
  * @notice Receive messages from LayerZero-style bridge.
