@@ -36,7 +36,7 @@ contract LZIntegrationTest is IntegrationBaseTest {
     address sourceExecutor = LZForwarder.EXECUTOR_ETHEREUM;
     address destinationExecutor;
 
-    address[] sourceDVNs = [LZForwarder.LAYER_ZERO_DVN_ETHEREUM, LZForwarder.NETHERMIND_DVN_ETHEREUM];
+    address[] sourceDVNs      = [LZForwarder.LAYER_ZERO_DVN_ETHEREUM, LZForwarder.NETHERMIND_DVN_ETHEREUM];
     address[] destinationDVNs = new address[](2);
 
     Domain destination2;

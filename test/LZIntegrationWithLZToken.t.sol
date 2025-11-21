@@ -40,7 +40,7 @@ contract LZIntegrationTestWithLZToken is IntegrationBaseTest {
     address sourceExecutor = LZForwarder.EXECUTOR_ETHEREUM;
     address destinationExecutor;
 
-    address[] sourceDVNs = [LZForwarder.LAYER_ZERO_DVN_ETHEREUM, LZForwarder.NETHERMIND_DVN_ETHEREUM];
+    address[] sourceDVNs      = [LZForwarder.LAYER_ZERO_DVN_ETHEREUM, LZForwarder.NETHERMIND_DVN_ETHEREUM];
     address[] destinationDVNs = new address[](2);
 
     address lzToken  = 0x6985884C4392D348587B19cb9eAAf157F13271cd;

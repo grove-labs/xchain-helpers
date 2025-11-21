@@ -143,26 +143,36 @@ library LZForwarder {
      * @notice Configures this contract (via address(this)) as a LayerZero sender for cross-chain messaging to a specific remote endpoint.
      * @dev Allows this contract to configure itself as a LayerZero sender for a specified remote endpoint.
      *      Registers the appropriate send library and ULN configuration needed for cross-chain messaging to the target remote endpoint.
+     *      Treat with caution. Test thoroughly all the params when using in production.
      *
-     * @param endpoint   The LayerZero endpoint to configure
-     * @param remoteEid  The remote (destination) endpoint ID to enable messaging to
-     * @param dvns       The DVN addresses required for message verification
+     * @param endpoint             The LayerZero endpoint to configure
+     * @param remoteEid            The remote (destination) endpoint ID to enable messaging to
+     * @param requiredDvns         The DVN addresses required for message verification
+     * @param optionalDvns         The DVN addresses optional for message verification
+     * @param optionalDVNThreshold The threshold for optional DVNs
+     * @param confirmations        The number of confirmations to wait before emitting the message
+     * @param maxMessageSize       The maximum message size
+     * @param executor             The executor address
      */
     function configureSender(
         address   endpoint,
         uint32    remoteEid,
-        address[] memory dvns,
+        address[] memory requiredDvns,
+        address[] memory optionalDvns,
+        uint8     optionalDVNThreshold,
+        uint32    confirmations,
+        uint32    maxMessageSize,
         address   executor
     ) internal {
         address sendLib = ILayerZeroEndpointV2(endpoint).getSendLibrary(address(0), remoteEid);
 
         UlnConfig memory ulnConfig = UlnConfig({
-            confirmations        : 15,
-            requiredDVNCount     : uint8(dvns.length),
-            optionalDVNCount     : 0,
-            optionalDVNThreshold : 0,
-            requiredDVNs         : dvns,
-            optionalDVNs         : new address[](0)
+            confirmations        : confirmations,
+            requiredDVNCount     : uint8(requiredDvns.length),
+            optionalDVNCount     : uint8(optionalDvns.length),
+            optionalDVNThreshold : optionalDVNThreshold,
+            requiredDVNs         : requiredDvns,
+            optionalDVNs         : optionalDvns
         });
 
         SetConfigParam[] memory ulnConfigParams = new SetConfigParam[](1);
@@ -175,7 +185,7 @@ library LZForwarder {
         ILayerZeroEndpointV2(endpoint).setConfig(address(this), sendLib, ulnConfigParams);
 
         ExecutorConfig memory executorConfig = ExecutorConfig({
-            maxMessageSize : 10_000,
+            maxMessageSize : maxMessageSize,
             executor       : executor
         });
 
@@ -187,6 +197,34 @@ library LZForwarder {
         });
 
         ILayerZeroEndpointV2(endpoint).setConfig(address(this), sendLib, executorConfigParams);
+    }
+
+    /**
+     * @notice Configures this contract (via address(this)) as a LayerZero sender for cross-chain messaging to a specific remote endpoint.
+     * @dev Allows this contract to configure itself as a LayerZero sender for a specified remote endpoint.
+     *      Registers the appropriate send library and ULN configuration needed for cross-chain messaging to the target remote endpoint.
+     *      Uses default values for optionalDVNThreshold, confirmations, and maxMessageSize.
+     *
+     * @param endpoint   The LayerZero endpoint to configure
+     * @param remoteEid  The remote (destination) endpoint ID to enable messaging to
+     * @param dvns       The DVN addresses required for message verification
+     */
+    function configureSender(
+        address   endpoint,
+        uint32    remoteEid,
+        address[] memory dvns,
+        address   executor
+    ) internal {
+        configureSender({
+            endpoint             : endpoint,
+            remoteEid            : remoteEid,
+            requiredDvns         : dvns,
+            optionalDvns         : new address[](0),
+            optionalDVNThreshold : 0,
+            confirmations        : 15,
+            maxMessageSize       : 10_000,
+            executor             : executor
+        });
     }
 
 }
