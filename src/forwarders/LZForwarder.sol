@@ -166,6 +166,11 @@ library LZForwarder {
     ) internal {
         address sendLib = ILayerZeroEndpointV2(endpoint).getSendLibrary(address(0), remoteEid);
 
+        ExecutorConfig memory executorConfig = ExecutorConfig({
+            maxMessageSize : maxMessageSize,
+            executor       : executor
+        });
+
         UlnConfig memory ulnConfig = UlnConfig({
             confirmations        : confirmations,
             requiredDVNCount     : uint8(requiredDvns.length),
@@ -175,28 +180,21 @@ library LZForwarder {
             optionalDVNs         : optionalDvns
         });
 
-        SetConfigParam[] memory ulnConfigParams = new SetConfigParam[](1);
-        ulnConfigParams[0] = SetConfigParam({
-            eid        : remoteEid,
-            configType : 2,
-            config     : abi.encode(ulnConfig)
-        });
+        SetConfigParam[] memory setConfigParam = new SetConfigParam[](2);
 
-        ILayerZeroEndpointV2(endpoint).setConfig(address(this), sendLib, ulnConfigParams);
-
-        ExecutorConfig memory executorConfig = ExecutorConfig({
-            maxMessageSize : maxMessageSize,
-            executor       : executor
-        });
-
-        SetConfigParam[] memory executorConfigParams = new SetConfigParam[](1);
-        executorConfigParams[0] = SetConfigParam({
+        setConfigParam[0] = SetConfigParam({
             eid        : remoteEid,
             configType : 1,
             config     : abi.encode(executorConfig)
         });
 
-        ILayerZeroEndpointV2(endpoint).setConfig(address(this), sendLib, executorConfigParams);
+        setConfigParam[1] = SetConfigParam({
+            eid        : remoteEid,
+            configType : 2,
+            config     : abi.encode(ulnConfig)
+        });
+
+        ILayerZeroEndpointV2(endpoint).setConfig(address(this), sendLib, setConfigParam);
     }
 
     /**
