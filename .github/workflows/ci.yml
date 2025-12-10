@@ -38,6 +38,7 @@ jobs:
           OPTIMISM_RPC_URL: ${{secrets.OPTIMISM_RPC_URL}}
           ARBITRUM_ONE_RPC_URL: ${{secrets.ARBITRUM_ONE_RPC_URL}}
           ARBITRUM_NOVA_RPC_URL: ${{secrets.ARBITRUM_NOVA_RPC_URL}}
+          AVALANCHE_RPC_URL: ${{secrets.AVALANCHE_RPC_URL}}
           GNOSIS_CHAIN_RPC_URL: ${{secrets.GNOSIS_CHAIN_RPC_URL}}
           BASE_RPC_URL: ${{secrets.BASE_RPC_URL}}
           POLYGON_RPC_URL: ${{secrets.POLYGON_RPC_URL}}
@@ -62,6 +63,7 @@ jobs:
           OPTIMISM_RPC_URL: ${{secrets.OPTIMISM_RPC_URL}}
           ARBITRUM_ONE_RPC_URL: ${{secrets.ARBITRUM_ONE_RPC_URL}}
           ARBITRUM_NOVA_RPC_URL: ${{secrets.ARBITRUM_NOVA_RPC_URL}}
+          AVALANCHE_RPC_URL: ${{secrets.AVALANCHE_RPC_URL}}
           GNOSIS_CHAIN_RPC_URL: ${{secrets.GNOSIS_CHAIN_RPC_URL}}
           BASE_RPC_URL: ${{secrets.BASE_RPC_URL}}
           POLYGON_RPC_URL: ${{secrets.POLYGON_RPC_URL}}
