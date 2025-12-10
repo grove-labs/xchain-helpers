@@ -25,6 +25,7 @@ library CCTPv2Forwarder {
     address internal constant MESSAGE_TRANSMITTER_CIRCLE_CODEX        = 0x81D40F21F12A8F0E3252Bccb954D722d4c464B64;
     address internal constant MESSAGE_TRANSMITTER_CIRCLE_SONIC        = 0x81D40F21F12A8F0E3252Bccb954D722d4c464B64;
     address internal constant MESSAGE_TRANSMITTER_CIRCLE_WORLDCHAIN   = 0x81D40F21F12A8F0E3252Bccb954D722d4c464B64;
+    address internal constant MESSAGE_TRANSMITTER_CIRCLE_MONAD        = 0x81D40F21F12A8F0E3252Bccb954D722d4c464B64;
     address internal constant MESSAGE_TRANSMITTER_CIRCLE_SEI          = 0x81D40F21F12A8F0E3252Bccb954D722d4c464B64;
     address internal constant MESSAGE_TRANSMITTER_CIRCLE_BSC          = 0x81D40F21F12A8F0E3252Bccb954D722d4c464B64;
     address internal constant MESSAGE_TRANSMITTER_CIRCLE_XDC          = 0x81D40F21F12A8F0E3252Bccb954D722d4c464B64;
@@ -44,6 +45,7 @@ library CCTPv2Forwarder {
     uint32 internal constant DOMAIN_ID_CIRCLE_CODEX        = 12;
     uint32 internal constant DOMAIN_ID_CIRCLE_SONIC        = 13;
     uint32 internal constant DOMAIN_ID_CIRCLE_WORLDCHAIN   = 14;
+    uint32 internal constant DOMAIN_ID_CIRCLE_MONAD        = 15;
     uint32 internal constant DOMAIN_ID_CIRCLE_SEI          = 16;
     uint32 internal constant DOMAIN_ID_CIRCLE_BSC          = 17;
     uint32 internal constant DOMAIN_ID_CIRCLE_XDC          = 18;

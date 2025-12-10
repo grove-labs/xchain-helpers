@@ -125,6 +125,11 @@ contract CircleCCTPv2IntegrationTest is IntegrationBaseTest {
         runCrossChainTests(getChain("world_chain").createFork());
     }
 
+    function test_monad() public {
+        destinationDomainId = CCTPv2Forwarder.DOMAIN_ID_CIRCLE_MONAD;
+        runCrossChainTests(getChain("monad").createFork());
+    }
+
     function test_bnb_smart_chain() public {
         destinationDomainId = CCTPv2Forwarder.DOMAIN_ID_CIRCLE_BSC;
         runCrossChainTests(getChain("bnb_smart_chain").createFork());

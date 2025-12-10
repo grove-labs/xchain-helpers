@@ -61,6 +61,8 @@ library CCTPv2BridgeTesting {
             return CCTPv2Forwarder.MESSAGE_TRANSMITTER_CIRCLE_SONIC;
         } else if (name == keccak256("world_chain")) {
             return CCTPv2Forwarder.MESSAGE_TRANSMITTER_CIRCLE_WORLDCHAIN;
+        } else if (name == keccak256("monad")) {
+            return CCTPv2Forwarder.MESSAGE_TRANSMITTER_CIRCLE_MONAD;
         } else if (name == keccak256("sei")) {
             return CCTPv2Forwarder.MESSAGE_TRANSMITTER_CIRCLE_SEI;
         } else if (name == keccak256("bnb_smart_chain")) {
