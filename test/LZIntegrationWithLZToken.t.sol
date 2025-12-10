@@ -158,6 +158,14 @@ contract LZIntegrationTestWithLZToken is IntegrationBaseTest {
             sourceExecutor
         );
 
+        LZReceiver.UlConfigParams memory ulnConfigParams
+            = LZReceiver.UlConfigParams({
+                confirmations        : 15,
+                requiredDVNs         : sourceDVNs,
+                optionalDVNs         : new address[](0),
+                optionalDVNThreshold : 0
+            });
+
         return address(new LZReceiver(
             sourceEndpoint,
             destinationEndpointId,
@@ -165,7 +173,7 @@ contract LZIntegrationTestWithLZToken is IntegrationBaseTest {
             address(moSource),
             makeAddr("delegate"),
             makeAddr("owner"),
-            sourceDVNs
+            ulnConfigParams
         ));
     }
 
@@ -181,6 +189,14 @@ contract LZIntegrationTestWithLZToken is IntegrationBaseTest {
             destinationExecutor
         );
 
+        LZReceiver.UlConfigParams memory ulnConfigParams
+            = LZReceiver.UlConfigParams({
+                confirmations        : 15,
+                requiredDVNs         : destinationDVNs,
+                optionalDVNs         : new address[](0),
+                optionalDVNThreshold : 0
+            });
+
         return address(new LZReceiver(
             destinationEndpoint,
             sourceEndpointId,
@@ -188,7 +204,7 @@ contract LZIntegrationTestWithLZToken is IntegrationBaseTest {
             address(moDestination),
             makeAddr("delegate"),
             makeAddr("owner"),
-            sourceDVNs
+            ulnConfigParams
         ));
     }
 

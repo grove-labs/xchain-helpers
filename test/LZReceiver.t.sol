@@ -43,6 +43,14 @@ contract LZReceiverTest is Test {
 
         target = new TargetContractMock();
 
+        LZReceiver.UlConfigParams memory ulnConfigParams
+            = LZReceiver.UlConfigParams({
+                confirmations        : 15,
+                requiredDVNs         : requiredDVNs,
+                optionalDVNs         : new address[](0),
+                optionalDVNThreshold : 0
+            });
+
         receiver = new LZReceiver(
             destinationEndpoint,
             srcEid,
@@ -50,7 +58,7 @@ contract LZReceiverTest is Test {
             address(target),
             delegate,
             owner,
-            requiredDVNs
+            ulnConfigParams
         );
     }
 
@@ -98,6 +106,14 @@ contract LZReceiverTest is Test {
         address[] memory singleDVN = new address[](1);
         singleDVN[0] = LZForwarder.NETHERMIND_DVN_BNB;
 
+        LZReceiver.UlConfigParams memory ulnConfigParams
+            = LZReceiver.UlConfigParams({
+                confirmations        : 15,
+                requiredDVNs         : singleDVN,
+                optionalDVNs         : new address[](0),
+                optionalDVNThreshold : 0
+            });
+
         LZReceiver receiverWithSingleDVN = new LZReceiver(
             destinationEndpoint,
             srcEid,
@@ -105,7 +121,7 @@ contract LZReceiverTest is Test {
             address(target),
             delegate,
             owner,
-            singleDVN
+            ulnConfigParams
         );
 
         (address receiveLib, ) = ILayerZeroEndpointV2(destinationEndpoint).getReceiveLibrary(
@@ -135,6 +151,14 @@ contract LZReceiverTest is Test {
         multipleDVNs[1] = LZForwarder.LAYER_ZERO_DVN_BNB;
         multipleDVNs[2] = thirdDVN;  // Using a high address to ensure proper sorting
 
+        LZReceiver.UlConfigParams memory ulnConfigParams
+            = LZReceiver.UlConfigParams({
+                confirmations        : 15,
+                requiredDVNs         : multipleDVNs,
+                optionalDVNs         : new address[](0),
+                optionalDVNThreshold : 0
+            });
+
         LZReceiver receiverWithMultipleDVNs = new LZReceiver(
             destinationEndpoint,
             srcEid,
@@ -142,7 +166,7 @@ contract LZReceiverTest is Test {
             address(target),
             delegate,
             owner,
-            multipleDVNs
+            ulnConfigParams
         );
 
         (address receiveLib, ) = ILayerZeroEndpointV2(destinationEndpoint).getReceiveLibrary(
