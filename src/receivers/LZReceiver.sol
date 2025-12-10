@@ -15,6 +15,13 @@ import { OAppReceiver, Origin, OAppCore } from "layerzerolabs/oapp-evm/contracts
  */
 contract LZReceiver is OAppReceiver {
 
+    struct UlConfigParams {
+        uint32    confirmations;
+        address[] requiredDVNs;
+        address[] optionalDVNs;
+        uint8     optionalDVNThreshold;
+    }
+
     using Address for address;
 
     address public immutable target;
@@ -24,32 +31,32 @@ contract LZReceiver is OAppReceiver {
     bytes32 public immutable sourceAuthority;
 
     constructor(
-        address   _destinationEndpoint,
-        uint32    _srcEid,
-        bytes32   _sourceAuthority,
-        address   _target,
-        address   _delegate,
-        address   _owner,
-        address[] memory _requiredDVNs
+        address        _destinationEndpoint,
+        uint32         _srcEid,
+        bytes32        _sourceAuthority,
+        address        _target,
+        address        _delegate,
+        address        _owner,
+        UlConfigParams memory _ulnConfigParams
     ) OAppCore(_destinationEndpoint, _delegate) Ownable(_owner) {
         target          = _target;
         sourceAuthority = _sourceAuthority;
         srcEid          = _srcEid;
 
         _setPeer(_srcEid, _sourceAuthority);
-        _configureReceiver(_requiredDVNs);
+        _configureReceiver(_ulnConfigParams);
     }
 
-    function _configureReceiver(address[] memory _requiredDVNs) internal {
+    function _configureReceiver(UlConfigParams memory _ulnConfigParams) internal {
         ( address receiveLib, ) = endpoint.getReceiveLibrary(address(0), srcEid);
 
         UlnConfig memory ulnConfig = UlnConfig({
-            confirmations        : 15,
-            requiredDVNCount     : uint8(_requiredDVNs.length),
-            optionalDVNCount     : 0,
-            optionalDVNThreshold : 0,
-            requiredDVNs         : _requiredDVNs,
-            optionalDVNs         : new address[](0)
+            confirmations        : _ulnConfigParams.confirmations,
+            requiredDVNCount     : uint8(_ulnConfigParams.requiredDVNs.length),
+            optionalDVNCount     : uint8(_ulnConfigParams.optionalDVNs.length),
+            optionalDVNThreshold : _ulnConfigParams.optionalDVNThreshold,
+            requiredDVNs         : _ulnConfigParams.requiredDVNs,
+            optionalDVNs         : _ulnConfigParams.optionalDVNs
         });
 
         SetConfigParam[] memory configParams = new SetConfigParam[](1);
