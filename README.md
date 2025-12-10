@@ -30,3 +30,12 @@ The most common pattern is to have an authorized contract forward a message to a
 
 Most receivers implement a `fallback()` function which after validating that the call came from an authorized party on the other side of the bridge will forward the call to the `target` contract with the same function signature. This separation of concerns makes it easy for the receiver contract to focus on validating the bridge message, and the business logic `target` contract can validate the `msg.sender` comes from the receiver which validates the whole process. This ensures no chain-specific code is required for the business logic contract.
 
+## 📯 Supported Bridges
+- AMB
+- Arbitrum _(ETH as a native token)_
+- Arbitrum _(ERC20 as a native token)_
+- CCTP v1
+- CCTP v2
+- Layer Zero
+- Optimism
+
