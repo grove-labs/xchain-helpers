@@ -71,6 +71,12 @@ abstract contract IntegrationBaseTest is Test {
             chainId : 9745
         }));
 
+        setChain("robinhood_chain", ChainData({
+            name    : "Robinhood Chain",
+            rpcUrl  : vm.envString("ROBINHOOD_RPC_URL"),
+            chainId : 4663
+        }));
+
         setChain("unichain", ChainData({
             name    : "Unichain",
             rpcUrl  : vm.envString("UNICHAIN_RPC_URL"),
