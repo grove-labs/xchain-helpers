@@ -6,7 +6,7 @@
     "rev": "2a86327542da20c428eccba05ecb0657375e5ad1"
   },
   "lib/forge-std": {
-    "rev": "e4aef94c1768803a16fe19f7ce8b65defd027cfd"
+    "rev": "257559546b763ec5fa7371fb77fef9102db86446"
   },
   "lib/openzeppelin-contracts": {
     "rev": "dbb6104ce834628e473d2173bbc9d47f81a9eec3"
